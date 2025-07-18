@@ -1,8 +1,9 @@
 package com.playschool.management.entity;
 
 public enum RoleName {
+    ROLE_DRIVER,
+    ROLE_OWNER,
+    ROLE_CUSTOMER,
     ROLE_ADMIN,
-    ROLE_TEACHER,
-    ROLE_PARENT,
-    ROLE_STAFF
+    ROLE_SUPER_ADMIN
 }

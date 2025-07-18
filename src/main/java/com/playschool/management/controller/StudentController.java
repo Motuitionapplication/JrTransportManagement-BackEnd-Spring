@@ -24,7 +24,7 @@ public class StudentController {
     private StudentService studentService;
     
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER') or hasRole('STAFF')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('OWNER') or hasRole('DRIVER')")
     public ResponseEntity<List<StudentResponse>> getAllStudents() {
         List<Student> students = studentService.getAllActiveStudents();
         List<StudentResponse> studentResponses = students.stream()
@@ -34,7 +34,7 @@ public class StudentController {
     }
     
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER') or hasRole('STAFF')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('OWNER') or hasRole('DRIVER')")
     public ResponseEntity<StudentResponse> getStudentById(@PathVariable Long id) {
         Optional<Student> student = studentService.getStudentById(id);
         if (student.isPresent()) {
@@ -44,7 +44,7 @@ public class StudentController {
     }
     
     @PostMapping("/register")
-//    @PreAuthorize("hasRole('ADMIN') or hasRole('STAFF')")
+//    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('OWNER')")
     public ResponseEntity<?> registerStudent(@Valid @RequestBody StudentRegistrationRequest request) {
         try {
             // Convert DTO to Entity
@@ -75,7 +75,7 @@ public class StudentController {
     }
     
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('STAFF')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('OWNER')")
     public ResponseEntity<?> updateStudent(@PathVariable Long id, @Valid @RequestBody StudentRegistrationRequest request) {
         try {
             // Convert DTO to Entity
@@ -101,7 +101,7 @@ public class StudentController {
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> deleteStudent(@PathVariable Long id) {
         try {
             studentService.deactivateStudent(id);
@@ -112,7 +112,7 @@ public class StudentController {
     }
     
     @PutMapping("/{id}/reactivate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> reactivateStudent(@PathVariable Long id) {
         try {
             Student reactivatedStudent = studentService.reactivateStudent(id);
@@ -123,7 +123,7 @@ public class StudentController {
     }
     
     @GetMapping("/search")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER') or hasRole('STAFF')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('OWNER') or hasRole('DRIVER')")
     public ResponseEntity<List<StudentResponse>> searchStudents(@RequestParam String name) {
         List<Student> students = studentService.searchStudentsByName(name);
         List<StudentResponse> studentResponses = students.stream()
@@ -133,7 +133,7 @@ public class StudentController {
     }
     
     @GetMapping("/parent/{email}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER') or hasRole('STAFF') or hasRole('PARENT')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('OWNER') or hasRole('CUSTOMER')")
     public ResponseEntity<List<StudentResponse>> getStudentsByParentEmail(@PathVariable String email) {
         List<Student> students = studentService.getStudentsByParentEmail(email);
         List<StudentResponse> studentResponses = students.stream()
@@ -143,7 +143,7 @@ public class StudentController {
     }
     
     @GetMapping("/count")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER') or hasRole('STAFF')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('OWNER') or hasRole('DRIVER')")
     public ResponseEntity<Long> getTotalActiveStudents() {
         long count = studentService.getTotalActiveStudents();
         return ResponseEntity.ok(count);

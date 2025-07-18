@@ -90,59 +90,69 @@ public class AuthController {
                     .badRequest()
                     .body(new MessageResponse("Error: Username is already taken!"));
         }
-        
+
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             return ResponseEntity
                     .badRequest()
                     .body(new MessageResponse("Error: Email is already in use!"));
         }
-        
+
         // Create new user's account
         User user = new User(signUpRequest.getUsername(),
                            signUpRequest.getEmail(),
                            encoder.encode(signUpRequest.getPassword()),
                            signUpRequest.getFirstName(),
                            signUpRequest.getLastName());
-        
+
         user.setPhoneNumber(signUpRequest.getPhoneNumber());
-        
+
         Set<String> strRoles = signUpRequest.getRole();
         Set<Role> roles = new HashSet<>();
-        
+
         if (strRoles == null) {
-            Role userRole = roleRepository.findByName(RoleName.ROLE_PARENT)
+            Role defaultRole = roleRepository.findByName(RoleName.ROLE_CUSTOMER)
                     .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-            roles.add(userRole);
+            roles.add(defaultRole);
         } else {
             strRoles.forEach(role -> {
-                switch (role) {
+                switch (role.toLowerCase()) {
                     case "admin" -> {
                         Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                         roles.add(adminRole);
                     }
-                    case "teacher" -> {
-                        Role teacherRole = roleRepository.findByName(RoleName.ROLE_TEACHER)
+                    case "super_admin", "superadmin" -> {
+                        Role superAdminRole = roleRepository.findByName(RoleName.ROLE_SUPER_ADMIN)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(teacherRole);
+                        roles.add(superAdminRole);
                     }
-                    case "staff" -> {
-                        Role staffRole = roleRepository.findByName(RoleName.ROLE_STAFF)
+                    case "driver" -> {
+                        Role driverRole = roleRepository.findByName(RoleName.ROLE_DRIVER)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(staffRole);
+                        roles.add(driverRole);
+                    }
+                    case "owner" -> {
+                        Role ownerRole = roleRepository.findByName(RoleName.ROLE_OWNER)
+                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                        roles.add(ownerRole);
+                    }
+                    case "customer" -> {
+                        Role customerRole = roleRepository.findByName(RoleName.ROLE_CUSTOMER)
+                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                        roles.add(customerRole);
                     }
                     default -> {
-                        Role userRole = roleRepository.findByName(RoleName.ROLE_PARENT)
+                        Role defaultRole = roleRepository.findByName(RoleName.ROLE_CUSTOMER)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(userRole);
+                        roles.add(defaultRole);
                     }
                 }
             });
         }
-        
+
         user.setRoles(roles);
         userRepository.save(user);
-        
+
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
     
@@ -160,21 +170,24 @@ public class AuthController {
                 return ResponseEntity.badRequest()
                     .body(new MessageResponse("Admin user already exists!"));
             }
-            
+
             // Create admin user
-            User adminUser = new User("admin", 
-                                    "admin@playschool.com", 
-                                    encoder.encode("admin123"), 
-                                    "Admin", 
+            User adminUser = new User("admin",
+                                    "admin@playschool.com",
+                                    encoder.encode("admin123"),
+                                    "Admin",
                                     "User");
-            
+
             adminUser.setPhoneNumber("1234567890");
-            
+
             Set<Role> roles = new HashSet<>();
             Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
                     .orElseThrow(() -> new RuntimeException("Error: Admin role not found."));
+            Role superAdminRole = roleRepository.findByName(RoleName.ROLE_SUPER_ADMIN)
+                    .orElseThrow(() -> new RuntimeException("Error: Super Admin role not found."));
             roles.add(adminRole);
-            
+            roles.add(superAdminRole);
+
             adminUser.setRoles(roles);
             userRepository.save(adminUser);
             
