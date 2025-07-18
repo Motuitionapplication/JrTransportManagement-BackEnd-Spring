@@ -37,7 +37,7 @@ public class WebSecurityConfig {
     @Autowired
     private AuthEntryPointJwt unauthorizedHandler;
 
-    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:4200,https://playschool-a2z.netlify.app}")
+    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:4200,https://jr-transport.netlify.app/}")
     private String allowedOrigins;
 
     @Autowired
@@ -81,6 +81,8 @@ public class WebSecurityConfig {
                     .requestMatchers("/api/home/**").permitAll()
                     .requestMatchers("/api/students/public/**").permitAll()
                     .requestMatchers("/h2-console/**").permitAll()
+                    // Swagger/OpenAPI endpoints
+                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                     .anyRequest().authenticated()
             );
 

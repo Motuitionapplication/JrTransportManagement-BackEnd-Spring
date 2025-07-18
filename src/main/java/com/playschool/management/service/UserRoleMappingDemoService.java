@@ -36,13 +36,16 @@ public class UserRoleMappingDemoService {
             System.out.println("Role ID: " + adminRole.getId() + " (this becomes role_id in user_roles table)");
             System.out.println("Role Name: " + adminRole.getName());
         }
-        
+        // You can also demonstrate with other roles, e.g.:
+        // Role driverRole = roleRepository.findByName(RoleName.ROLE_DRIVER).orElse(null);
+        // ...
+
         // 3. When we add role to user, JPA creates the mapping
         if (user != null && adminRole != null) {
             user.getRoles().add(adminRole);
             userRepository.save(user);
-            
-            System.out.println("JPA will execute: INSERT INTO user_roles (user_id, role_id) VALUES (" 
+
+            System.out.println("JPA will execute: INSERT INTO user_roles (user_id, role_id) VALUES ("
                              + user.getId() + ", " + adminRole.getId() + ")");
         }
         
