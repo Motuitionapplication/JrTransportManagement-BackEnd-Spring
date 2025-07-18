@@ -4,9 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class PlaySchoolManagementApplication {
+public class JrTransportManagementApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(PlaySchoolManagementApplication.class, args);
+        SpringApplication.run(JrTransportManagementApplication.class, args);
     }
 }

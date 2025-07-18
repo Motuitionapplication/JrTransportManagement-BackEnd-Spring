@@ -2,7 +2,8 @@ package com.playschool.management.config;
 
 import java.util.Arrays;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,21 +32,25 @@ import com.playschool.management.security.services.UserDetailsServiceImpl;
 @EnableMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig {
 
-    @Autowired
-    UserDetailsServiceImpl userDetailsService;
+    private static final Logger logger = LoggerFactory.getLogger(WebSecurityConfig.class);
 
-    @Autowired
-    private AuthEntryPointJwt unauthorizedHandler;
+    private final UserDetailsServiceImpl userDetailsService;
+    private final AuthEntryPointJwt unauthorizedHandler;
+    private final AuthTokenFilter authenticationJwtTokenFilter;
+    
+    public WebSecurityConfig(UserDetailsServiceImpl userDetailsService, 
+                           AuthEntryPointJwt unauthorizedHandler,
+                           AuthTokenFilter authenticationJwtTokenFilter) {
+        this.userDetailsService = userDetailsService;
+        this.unauthorizedHandler = unauthorizedHandler;
+        this.authenticationJwtTokenFilter = authenticationJwtTokenFilter;
+    }
 
     @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:4200,https://jr-transport.netlify.app/}")
     private String allowedOrigins;
 
-    @Autowired
-    private AuthTokenFilter authenticationJwtTokenFilter;
-
-    @SuppressWarnings("deprecation")
     @Bean
-    DaoAuthenticationProvider authenticationProvider() {
+    public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
@@ -53,7 +58,7 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    PasswordEncoder passwordEncoder() {
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
@@ -64,9 +69,8 @@ public class WebSecurityConfig {
                 .build();
     }
 
-    @SuppressWarnings("unused")
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
@@ -113,7 +117,7 @@ public class WebSecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         
-        System.out.println("CORS Configuration - Allowed Origins: " + Arrays.toString(origins));
+        logger.info("CORS Configuration - Allowed Origins: {}", Arrays.toString(origins));
         return source;
     }
 }
