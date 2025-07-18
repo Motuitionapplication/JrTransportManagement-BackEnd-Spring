@@ -82,7 +82,6 @@ public class WebSecurityConfig {
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/test/**").permitAll()
                     .requestMatchers("/api/home/**").permitAll()
-                    .requestMatchers("/api/students/public/**").permitAll()
                     .requestMatchers("/h2-console/**").permitAll()
                     // Swagger/OpenAPI endpoints
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()

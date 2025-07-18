@@ -39,6 +39,7 @@ public class WalletTransaction {
     private String transactionId; // unique transaction identifier
     private String transactionType; // for compatibility with service
     private LocalDateTime transactionDate;
+    private BigDecimal balanceAfter; // wallet balance after this transaction
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -77,7 +78,6 @@ public class WalletTransaction {
     }
     
     public void setBalanceAfter(BigDecimal balanceAfter) {
-        // This could be added as a field if needed for service compatibility
-        // For now, we'll just accept the setter call
+        this.balanceAfter = balanceAfter;
     }
 }

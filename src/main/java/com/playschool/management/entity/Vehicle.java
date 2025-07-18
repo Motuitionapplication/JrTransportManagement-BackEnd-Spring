@@ -114,9 +114,9 @@ public class Vehicle {
     })
     private FareDetails fareDetails;
     
-    // Maintenance records (separate entity)
-    @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<MaintenanceRecord> maintenanceHistory = new ArrayList<>();
+    // Maintenance records (separate entity) - Remove bidirectional mapping to avoid DDL issues
+    // @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    // private List<MaintenanceRecord> maintenanceHistory = new ArrayList<>();
     
     private LocalDate nextServiceDate;
     
