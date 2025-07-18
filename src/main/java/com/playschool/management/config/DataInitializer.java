@@ -15,14 +15,13 @@ public class DataInitializer implements CommandLineRunner {
     
     @Override
     public void run(String... args) throws Exception {
-        // Initialize roles if they don't exist
-        if (roleRepository.count() == 0) {
-            roleRepository.save(new Role(RoleName.ROLE_DRIVER));
-            roleRepository.save(new Role(RoleName.ROLE_OWNER));
-            roleRepository.save(new Role(RoleName.ROLE_CUSTOMER));
-            roleRepository.save(new Role(RoleName.ROLE_ADMIN));
-            roleRepository.save(new Role(RoleName.ROLE_SUPER_ADMIN));
-            System.out.println("Roles initialized successfully!");
+        // Ensure all required roles exist in the database
+        for (RoleName roleName : RoleName.values()) {
+            if (roleRepository.findByName(roleName).isEmpty()) {
+                roleRepository.save(new Role(roleName));
+                System.out.println("Inserted missing role: " + roleName);
+            }
         }
+        System.out.println("Role check/insert completed.");
     }
 }

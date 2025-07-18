@@ -43,7 +43,6 @@ public class WebSecurityConfig {
     @Autowired
     private AuthTokenFilter authenticationJwtTokenFilter;
 
-
     @SuppressWarnings("deprecation")
     @Bean
     DaoAuthenticationProvider authenticationProvider() {
@@ -52,7 +51,6 @@ public class WebSecurityConfig {
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
-
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -76,6 +74,7 @@ public class WebSecurityConfig {
             .authorizeHttpRequests(auth -> 
                 auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     .requestMatchers("/").permitAll()
+                    .requestMatchers("/api/health").permitAll() // <-- Added this line
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/test/**").permitAll()
                     .requestMatchers("/api/home/**").permitAll()
