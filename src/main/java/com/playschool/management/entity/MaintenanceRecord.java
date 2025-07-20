@@ -23,7 +23,7 @@ public class MaintenanceRecord {
     private String id;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vehicle_id", nullable = false)
+    @JoinColumn(name = "vehicle_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private Vehicle vehicle;
     
     @Enumerated(EnumType.STRING)

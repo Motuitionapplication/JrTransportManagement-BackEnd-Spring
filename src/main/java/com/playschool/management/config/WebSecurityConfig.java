@@ -1,6 +1,8 @@
 package com.playschool.management.config;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,16 +39,16 @@ public class WebSecurityConfig {
     private final UserDetailsServiceImpl userDetailsService;
     private final AuthEntryPointJwt unauthorizedHandler;
     private final AuthTokenFilter authenticationJwtTokenFilter;
-    
-    public WebSecurityConfig(UserDetailsServiceImpl userDetailsService, 
-                           AuthEntryPointJwt unauthorizedHandler,
-                           AuthTokenFilter authenticationJwtTokenFilter) {
+
+    public WebSecurityConfig(UserDetailsServiceImpl userDetailsService,
+                             AuthEntryPointJwt unauthorizedHandler,
+                             AuthTokenFilter authenticationJwtTokenFilter) {
         this.userDetailsService = userDetailsService;
         this.unauthorizedHandler = unauthorizedHandler;
         this.authenticationJwtTokenFilter = authenticationJwtTokenFilter;
     }
 
-    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:4200,https://jr-transport.netlify.app/}")
+    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:4200,https://jr-transport.netlify.app}")
     private String allowedOrigins;
 
     @Bean
@@ -75,15 +77,9 @@ public class WebSecurityConfig {
             .csrf(csrf -> csrf.disable())
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> 
+            .authorizeHttpRequests(auth ->
                 auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                    .requestMatchers("/").permitAll()
-                    .requestMatchers("/api/health").permitAll() // <-- Added this line
                     .requestMatchers("/api/auth/**").permitAll()
-                    .requestMatchers("/api/test/**").permitAll()
-                    .requestMatchers("/api/home/**").permitAll()
-                    .requestMatchers("/h2-console/**").permitAll()
-                    // Swagger/OpenAPI endpoints
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                     .anyRequest().authenticated()
             );
@@ -91,7 +87,7 @@ public class WebSecurityConfig {
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authenticationJwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // For H2 Console (remove in production)
+        // For H2 Console (optional: remove for production)
         http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));
 
         return http.build();
@@ -100,23 +96,27 @@ public class WebSecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
-        // Split the comma-separated origins string and trim whitespace
+
+        // Parse allowed origins and remove "*"
         String[] origins = allowedOrigins.split(",");
-        for (int i = 0; i < origins.length; i++) {
-            origins[i] = origins[i].trim();
+        List<String> filteredOrigins = new ArrayList<>();
+        for (String origin : origins) {
+            String trimmed = origin.trim();
+            if (!"*".equals(trimmed)) {
+                filteredOrigins.add(trimmed);
+            }
         }
-        
-        configuration.setAllowedOriginPatterns(Arrays.asList(origins)); // Use patterns instead of origins
+
+        configuration.setAllowedOrigins(filteredOrigins); // ✅ Use exact origins
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L); // Cache preflight response for 1 hour
+        configuration.setMaxAge(3600L); // Cache preflight requests for 1 hour
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-        
-        logger.info("CORS Configuration - Allowed Origins: {}", Arrays.toString(origins));
+
+        logger.info("CORS Configuration - Allowed Origins: {}", filteredOrigins);
         return source;
     }
 }

@@ -40,6 +40,7 @@ public class Vehicle {
     private String manufacturer;
     
     @NotNull(message = "Year is required")
+    @Column(name = "`year`")
     private Integer year;
     
     @NotNull(message = "Capacity is required")

@@ -23,7 +23,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/vehicle-owners")
 @Tag(name = "Vehicle Owner Management", description = "APIs for managing vehicle owners in the transport system")
-@CrossOrigin(origins = "*")
 public class VehicleOwnerController {
 
     private static final Logger log = LoggerFactory.getLogger(VehicleOwnerController.class);
