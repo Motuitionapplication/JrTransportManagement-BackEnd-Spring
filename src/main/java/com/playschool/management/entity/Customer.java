@@ -21,6 +21,30 @@ import java.util.ArrayList;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Customer {
+    // Explicit getters for DTO mapping (for Lombok/IDE compatibility)
+    public String getAlternatePhone() { return alternatePhone; }
+    public VehicleOwner.Address getAddress() { return address; }
+    public String getProfilePhoto() { return profilePhoto; }
+    public LocalDate getDateOfBirth() { return dateOfBirth; }
+    public String getFatherName() { return fatherName; }
+    public String getUserId() { return userId; }
+    public String getPassword() { return password; }
+    // Explicit getters for DTO mapping
+    public String getId() {
+        return id;
+    }
+    public String getFirstName() {
+        return firstName;
+    }
+    public String getLastName() {
+        return lastName;
+    }
+    public String getEmail() {
+        return email;
+    }
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
     
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
