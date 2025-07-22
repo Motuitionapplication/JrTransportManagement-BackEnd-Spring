@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+import java.util.Optional;
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, String> {
     
@@ -110,4 +111,5 @@ public interface CustomerRepository extends JpaRepository<Customer, String> {
     // Check if bank account number exists
     @Query("SELECT COUNT(c) > 0 FROM Customer c WHERE c.bankDetails.accountNumber = :accountNumber")
     boolean existsByBankAccountNumber(@Param("accountNumber") String accountNumber);
+
 }

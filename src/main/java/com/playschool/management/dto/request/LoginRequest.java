@@ -8,11 +8,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
     example = "{\n  \"username\": \"john_doe\",\n  \"password\": \"securePassword123\"\n}"
 )
 public class LoginRequest {
-    @Schema(description = "Unique username of the user", example = "john_doe", required = true)
+    @Schema(description = "Unique username of the user", example = "customer", required = true)
     @NotBlank
     private String username;
 
-    @Schema(description = "User's password", example = "securePassword123", required = true)
+    @Schema(description = "User's password", example = "customer123", required = true)
     @NotBlank
     private String password;
 

@@ -1,3 +1,4 @@
+
 package com.playschool.management.entity;
 
 import jakarta.persistence.*;
@@ -26,20 +27,18 @@ public class Customer {
     private String id;
     
     // Profile Information
-    @NotBlank(message = "First name is required")
+
+    @Column(nullable = true)
     private String firstName;
-    
-    @NotBlank(message = "Last name is required")
+    @Column(nullable = true)
     private String lastName;
-    
-    @NotBlank(message = "Father/Husband name is required")
+    @Column(nullable = true)
     private String fatherName;
     
     @Email(message = "Valid email is required")
     @Column(unique = true, nullable = false)
     private String email;
     
-    @NotBlank(message = "Phone number is required")
     @Column(unique = true)
     private String phoneNumber;
     
@@ -56,7 +55,7 @@ public class Customer {
     })
     private VehicleOwner.Address address;
     
-    @NotBlank(message = "Profile photo is required")
+    @Column(nullable = true)
     private String profilePhoto; // captured with eye blinking verification
     
     private LocalDate dateOfBirth;
@@ -65,7 +64,6 @@ public class Customer {
     @Column(unique = true, nullable = false)
     private String userId;
     
-    @NotBlank(message = "Password is required")
     private String password; // This will be hashed
     
     // Identity Proof
@@ -183,5 +181,15 @@ public class Customer {
         private String phonePayNumber;
         private Boolean isVerified = false;
         private LocalDateTime verificationDate;
+    }
+    // Explicit setters for minimal registration
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 }

@@ -45,6 +45,8 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+    @Autowired
+    com.playschool.management.repository.CustomerRepository customerRepository;
     
     @Autowired
     AuthenticationManager authenticationManager;
@@ -153,7 +155,14 @@ public class AuthController {
         }
 
         user.setRoles(roles);
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        // Create minimal Customer record linked to User
+        com.playschool.management.entity.Customer customer = new com.playschool.management.entity.Customer();
+        customer.setUserId(String.valueOf(savedUser.getId()));
+        customer.setEmail(savedUser.getEmail());
+        customer.setPhoneNumber(savedUser.getPhoneNumber());
+        customerRepository.save(customer);
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
