@@ -45,6 +45,8 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+    @Autowired
+    com.playschool.management.repository.CustomerRepository customerRepository;
     
     @Autowired
     AuthenticationManager authenticationManager;
@@ -117,28 +119,28 @@ public class AuthController {
             roles.add(defaultRole);
         } else {
             strRoles.forEach(role -> {
-                switch (role.toLowerCase()) {
-                    case "admin" -> {
+                switch (role) {
+                    case "ROLE_ADMIN" -> {
                         Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                         roles.add(adminRole);
                     }
-                    case "super_admin", "superadmin" -> {
+                    case "ROLE_SUPER_ADMIN" -> {
                         Role superAdminRole = roleRepository.findByName(RoleName.ROLE_SUPER_ADMIN)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                         roles.add(superAdminRole);
                     }
-                    case "driver" -> {
+                    case "ROLE_DRIVER" -> {
                         Role driverRole = roleRepository.findByName(RoleName.ROLE_DRIVER)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                         roles.add(driverRole);
                     }
-                    case "owner" -> {
+                    case "ROLE_OWNER" -> {
                         Role ownerRole = roleRepository.findByName(RoleName.ROLE_OWNER)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                         roles.add(ownerRole);
                     }
-                    case "customer" -> {
+                    case "ROLE_CUSTOMER" -> {
                         Role customerRole = roleRepository.findByName(RoleName.ROLE_CUSTOMER)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                         roles.add(customerRole);
@@ -153,7 +155,14 @@ public class AuthController {
         }
 
         user.setRoles(roles);
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        // Create minimal Customer record linked to User
+        com.playschool.management.entity.Customer customer = new com.playschool.management.entity.Customer();
+        customer.setUserId(String.valueOf(savedUser.getId()));
+        customer.setEmail(savedUser.getEmail());
+        customer.setPhoneNumber(savedUser.getPhoneNumber());
+        customerRepository.save(customer);
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }

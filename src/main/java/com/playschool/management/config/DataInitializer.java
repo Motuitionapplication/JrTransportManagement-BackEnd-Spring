@@ -3,15 +3,21 @@ package com.playschool.management.config;
 import com.playschool.management.entity.Role;
 import com.playschool.management.entity.RoleName;
 import com.playschool.management.repository.RoleRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
     
-    @Autowired
-    private RoleRepository roleRepository;
+    private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
+    
+    private final RoleRepository roleRepository;
+    
+    public DataInitializer(RoleRepository roleRepository) {
+        this.roleRepository = roleRepository;
+    }
     
     @Override
     public void run(String... args) throws Exception {
@@ -19,9 +25,9 @@ public class DataInitializer implements CommandLineRunner {
         for (RoleName roleName : RoleName.values()) {
             if (roleRepository.findByName(roleName).isEmpty()) {
                 roleRepository.save(new Role(roleName));
-                System.out.println("Inserted missing role: " + roleName);
+                logger.info("Inserted missing role: {}", roleName);
             }
         }
-        System.out.println("Role check/insert completed.");
+        logger.info("Role check/insert completed.");
     }
 }

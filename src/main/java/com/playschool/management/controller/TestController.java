@@ -21,10 +21,22 @@ public class TestController {
         return "Parent Content.";
     }
     
-    @GetMapping("/teacher")
-    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
-    public String teacherAccess() {
-        return "Teacher Board.";
+    @GetMapping("/driver")
+    @PreAuthorize("hasRole('DRIVER') or hasRole('ADMIN')")
+    public String driverAccess() {
+        return "Driver Board.";
+    }
+    
+    @GetMapping("/owner")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    public String ownerAccess() {
+        return "Vehicle Owner Board.";
+    }
+    
+    @GetMapping("/customer")
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
+    public String customerAccess() {
+        return "Customer Board.";
     }
     
     @GetMapping("/admin")
