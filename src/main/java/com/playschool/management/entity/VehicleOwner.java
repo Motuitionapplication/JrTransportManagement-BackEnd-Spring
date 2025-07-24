@@ -30,22 +30,26 @@ public class VehicleOwner {
     private String id;
     
     // Profile Information
-    @NotBlank(message = "First name is required")
-    private String firstName;
+    private String firstName = "";
     
-    @NotBlank(message = "Last name is required")
-    private String lastName;
+    private String lastName = "";
     
-    @Email(message = "Valid email is required")
-    @Column(unique = true, nullable = false)
-    private String email;
+    @Column(unique = true, nullable = true)
+    private String email = "";
     
-    @NotBlank(message = "Phone number is required")
-    @Column(unique = true)
-    private String phoneNumber;
+    @Column(unique = true, nullable = true)
+    private String phoneNumber = "";
     
-    private String alternatePhone;
+    private String alternatePhone = "";
     
+    
+    public List<Vehicle> getVehicles() {
+        return vehicles;
+    }
+
+    public void setVehicles(List<Vehicle> vehicles) {
+        this.vehicles = vehicles;
+    }
     // Address
     @Embedded
     @AttributeOverrides({
@@ -57,29 +61,27 @@ public class VehicleOwner {
     })
     private Address address;
     
-    private String profilePhoto;
+    private String profilePhoto = "";
     
     // Authentication
-    @Column(unique = true, nullable = false)
-    private String userId;
+    @Column(unique = true, nullable = true)
+    private String userId = "";
     
-    @NotBlank(message = "Password is required")
-    private String password; // This will be hashed
+    private String password = ""; // This will be hashed
     
     // Business Details
-    private String companyName;
-    private String gstNumber;
+    private String companyName = "";
+    private String gstNumber = "";
     
-    @NotBlank(message = "PAN number is required")
-    private String panNumber;
+    private String panNumber = "";
     
     // Additional properties that services are expecting
-    private String ownerId; // This might be needed for compatibility
+    private String ownerId = ""; // This might be needed for compatibility
     private BigDecimal averageRating = BigDecimal.ZERO;
     private Integer totalRatings = 0;
     
-    @Column(name = "owner_verification_notes")
-    private String verificationNotes;
+    @Column(name = "owner_verification_notes", nullable = true)
+    private String verificationNotes = "";
     
     @Embedded
     @AttributeOverrides({
@@ -187,36 +189,36 @@ public class VehicleOwner {
     @AllArgsConstructor
     public static class Address {
         public String getStreet() {
-			return street;
-		}
-		public void setStreet(String street) {
-			this.street = street;
-		}
-		public String getCity() {
-			return city;
-		}
-		public void setCity(String city) {
-			this.city = city;
-		}
-		public String getState() {
-			return state;
-		}
-		public void setState(String state) {
-			this.state = state;
-		}
-		public String getPincode() {
-			return pincode;
-		}
-		public void setPincode(String pincode) {
-			this.pincode = pincode;
-		}
-		public String getCountry() {
-			return country;
-		}
-		public void setCountry(String country) {
-			this.country = country;
-		}
-		private String street;
+            return street;
+        }
+        public void setStreet(String street) {
+            this.street = street;
+        }
+        public String getCity() {
+            return city;
+        }
+        public void setCity(String city) {
+            this.city = city;
+        }
+        public String getState() {
+            return state;
+        }
+        public void setState(String state) {
+            this.state = state;
+        }
+        public String getPincode() {
+            return pincode;
+        }
+        public void setPincode(String pincode) {
+            this.pincode = pincode;
+        }
+        public String getCountry() {
+            return country;
+        }
+        public void setCountry(String country) {
+            this.country = country;
+        }
+        private String street;
         private String city;
         private String state;
         private String pincode;
@@ -423,5 +425,9 @@ public class VehicleOwner {
         details.setVerificationDate(null);
         details.setVerificationNotes(null);
         return details;
+    }
+    
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
     }
 }
