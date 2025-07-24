@@ -1,3 +1,4 @@
+
 package com.playschool.management.entity;
 
 import jakarta.persistence.*;
@@ -25,32 +26,31 @@ public class Vehicle {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     
-    @Column(unique = true, nullable = false)
-    @NotBlank(message = "Vehicle number is required")
-    private String vehicleNumber;
+    @Column(unique = true, nullable = true)
+    private String vehicleNumber = "";
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = true)
     private VehicleType vehicleType;
     
-    @NotBlank(message = "Model is required")
-    private String model;
+    @Column(nullable = true)
+    private String model = "";
     
-    @NotBlank(message = "Manufacturer is required")
-    private String manufacturer;
+    @Column(nullable = true)
+    private String manufacturer = "";
     
-    @NotNull(message = "Year is required")
-    @Column(name = "`year`")
+    @Column(name = "`year`", nullable = true)
     private Integer year;
     
-    @NotNull(message = "Capacity is required")
     @DecimalMin(value = "0.0", message = "Capacity must be positive")
+    @Column(nullable = true)
     private BigDecimal capacity;
     
-    @Column(nullable = false)
-    private String ownerId;
+    @Column(nullable = true)
+    private String ownerId = "";
     
-    private String driverId;
+    @Column(nullable = true)
+    private String driverId = "";
     
     // Document details as embedded objects
     @Embedded
@@ -95,13 +95,17 @@ public class Vehicle {
     private DocumentInfo pollution;
     
     // Current location
+    @Column(nullable = true)
     private Double currentLatitude;
+    @Column(nullable = true)
     private Double currentLongitude;
-    private String currentAddress;
+    @Column(nullable = true)
+    private String currentAddress = "";
+    @Column(nullable = true)
     private LocalDateTime lastLocationUpdate;
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = true)
     private VehicleStatus status = VehicleStatus.AVAILABLE;
     
     // Fare details
@@ -119,18 +123,21 @@ public class Vehicle {
     // @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     // private List<MaintenanceRecord> maintenanceHistory = new ArrayList<>();
     
+    @Column(nullable = true)
     private LocalDate nextServiceDate;
     
     @CreationTimestamp
+    @Column(nullable = true)
     private LocalDateTime createdAt;
     
     @UpdateTimestamp
+    @Column(nullable = true)
     private LocalDateTime updatedAt;
     
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Boolean isActive = true;
     
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Boolean isVerified = false;
     
     // Enums
@@ -277,5 +284,9 @@ public class Vehicle {
     
     public DocumentInfo getPermit() {
         return this.permit;
+    }
+    
+    public void setVehicleNumber(String vehicleNumber) {
+        this.vehicleNumber = vehicleNumber;
     }
 }

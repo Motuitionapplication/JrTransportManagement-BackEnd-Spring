@@ -30,6 +30,8 @@ import com.playschool.management.entity.RoleName;
 import com.playschool.management.entity.User;
 import com.playschool.management.repository.RoleRepository;
 import com.playschool.management.repository.UserRepository;
+import com.playschool.management.repository.VehicleOwnerRepository;
+import com.playschool.management.repository.VehicleRepository;
 import com.playschool.management.security.jwt.JwtUtils;
 import com.playschool.management.security.services.UserPrincipal;
 
@@ -47,6 +49,9 @@ import jakarta.validation.Valid;
 public class AuthController {
     @Autowired
     com.playschool.management.repository.CustomerRepository customerRepository;
+
+    @Autowired
+    com.playschool.management.repository.AdminRepository adminRepository;
     
     @Autowired
     AuthenticationManager authenticationManager;
@@ -62,6 +67,12 @@ public class AuthController {
     
     @Autowired
     JwtUtils jwtUtils;
+    
+    @Autowired
+    VehicleRepository vehicleRepository;
+    
+    @Autowired
+    VehicleOwnerRepository vehicleOwnerRepository;
     
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -157,12 +168,44 @@ public class AuthController {
         user.setRoles(roles);
         User savedUser = userRepository.save(user);
 
-        // Create minimal Customer record linked to User
-        com.playschool.management.entity.Customer customer = new com.playschool.management.entity.Customer();
-        customer.setUserId(String.valueOf(savedUser.getId()));
-        customer.setEmail(savedUser.getEmail());
-        customer.setPhoneNumber(savedUser.getPhoneNumber());
-        customerRepository.save(customer);
+        // If user is admin, create entry in admin table
+        boolean isAdmin = roles.stream().anyMatch(r -> r.getName() == RoleName.ROLE_ADMIN);
+        if (isAdmin) {
+            com.playschool.management.entity.Admin admin = new com.playschool.management.entity.Admin();
+            admin.setUserId(savedUser.getId());
+            admin.setEmail(savedUser.getEmail());
+            admin.setFirstName(savedUser.getFirstName());
+            admin.setLastName(savedUser.getLastName());
+            admin.setPhoneNumber(savedUser.getPhoneNumber());
+            adminRepository.save(admin);
+        }
+
+        // If user is customer, create entry in customer table
+        boolean isCustomer = roles.stream().anyMatch(r -> r.getName() == RoleName.ROLE_CUSTOMER);
+        if (isCustomer) {
+            com.playschool.management.entity.Customer customer = new com.playschool.management.entity.Customer();
+            customer.setUserId(String.valueOf(savedUser.getId()));
+            customer.setEmail(savedUser.getEmail());
+            customer.setPhoneNumber(savedUser.getPhoneNumber());
+            customerRepository.save(customer);
+        }
+        
+        // If user is owner, create entry in vehicle table and vehicle_owner map table
+        boolean isOwner = roles.stream().anyMatch(r -> r.getName() == RoleName.ROLE_OWNER);
+        if (isOwner) {
+            // Create Vehicle
+            com.playschool.management.entity.Vehicle vehicle = new com.playschool.management.entity.Vehicle();
+            vehicle.setVehicleNumber(signUpRequest.getVehicleNumber());
+            // Set other vehicle fields if needed
+            com.playschool.management.entity.Vehicle savedVehicle = vehicleRepository.save(vehicle);
+            
+            // Create VehicleOwner mapping
+            com.playschool.management.entity.VehicleOwner vehicleOwner = new com.playschool.management.entity.VehicleOwner();
+            vehicleOwner.setOwnerId(String.valueOf(savedUser.getId()));
+            vehicleOwner.getVehicles().add(savedVehicle);
+            // Set other owner fields if needed
+            vehicleOwnerRepository.save(vehicleOwner);
+        }
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }

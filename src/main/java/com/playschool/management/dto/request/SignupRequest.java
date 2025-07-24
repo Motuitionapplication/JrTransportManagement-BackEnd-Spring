@@ -8,10 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Set;
 
-@Schema(
-    description = "Signup request containing user registration details.",
-    example = "{\n  \"username\": \"john_doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"securePassword123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phoneNumber\": \"+1234567890\",\n  \"role\": [\"ROLE_OWNER\"]\n}"
-)
+@Schema(description = "Signup request containing user registration details.")
 public class SignupRequest {
 
     @Schema(description = "Unique username of the user", example = "john_doe", required = true)
@@ -71,4 +68,11 @@ public class SignupRequest {
 
     public Set<String> getRole() { return role; }
     public void setRole(Set<String> role) { this.role = role; }
+    
+    @Schema(description = "Vehicle number for driver/owner registration", example = "MH12AB1234")
+    @Size(max = 20)
+    private String vehicleNumber;
+    
+    public String getVehicleNumber() { return vehicleNumber; }
+    public void setVehicleNumber(String vehicleNumber) { this.vehicleNumber = vehicleNumber; }
 }
