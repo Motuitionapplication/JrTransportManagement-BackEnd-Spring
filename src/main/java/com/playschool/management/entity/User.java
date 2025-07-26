@@ -1,7 +1,4 @@
-
 package com.playschool.management.entity;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -13,66 +10,51 @@ import java.util.Set;
 
 @Entity
 @Table(name = "users")
-@Schema(
-    description = "User entity representing a registered user in the system.",
-    example = "{\n  \"id\": 1,\n  \"username\": \"john_doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"securePassword123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phoneNumber\": \"+1234567890\",\n  \"roles\": [\n    {\"id\": 1, \"name\": \"ROLE_OWNER\"}\n  ],\n  \"createdAt\": \"2025-07-21T12:00:00\",\n  \"updatedAt\": \"2025-07-21T12:00:00\",\n  \"isActive\": true\n}"
-)
 public class User {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Schema(description = "Unique identifier for the user", example = "1")
     private Long id;
     
     @NotBlank
     @Size(max = 50)
     @Column(unique = true)
-    @Schema(description = "Unique username of the user", example = "customer", required = true)
     private String username;
     
     @NotBlank
     @Size(max = 100)
     @Email
     @Column(unique = true)
-    @Schema(description = "User's email address", example = "john.doe@example.com", required = true)
     private String email;
     
     @NotBlank
     @Size(max = 120)
-    @Schema(description = "User's password (hashed)", example = "customer123", required = true)
     private String password;
     
     @NotBlank
     @Size(max = 50)
-    @Schema(description = "User's first name", example = "John", required = true)
     private String firstName;
     
     @NotBlank
     @Size(max = 50)
-    @Schema(description = "User's last name", example = "Doe", required = true)
     private String lastName;
     
     @Size(max = 15)
-    @Schema(description = "User's phone number", example = "+1234567890")
     private String phoneNumber;
     
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_roles",
                joinColumns = @JoinColumn(name = "user_id"),
                inverseJoinColumns = @JoinColumn(name = "role_id"))
-    @Schema(description = "Set of roles assigned to the user")
     private Set<Role> roles = new HashSet<>();
     
     @Column(name = "created_at")
-    @Schema(description = "Timestamp when the user was created", example = "2025-07-21T12:00:00")
     private LocalDateTime createdAt;
-
+    
     @Column(name = "updated_at")
-    @Schema(description = "Timestamp when the user was last updated", example = "2025-07-21T12:00:00")
     private LocalDateTime updatedAt;
-
+    
     @Column(name = "is_active")
-    @Schema(description = "Whether the user is active", example = "true")
     private Boolean isActive = true;
     
     // Constructors
