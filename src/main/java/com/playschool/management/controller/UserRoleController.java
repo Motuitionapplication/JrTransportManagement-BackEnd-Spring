@@ -32,7 +32,7 @@ public class UserRoleController {
      * Add role to user
      */
     @PostMapping("/{userId}/roles/{roleName}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> addRoleToUser(@PathVariable Long userId, 
                                           @PathVariable String roleName) {
         try {
@@ -48,7 +48,7 @@ public class UserRoleController {
      * Remove role from user
      */
     @DeleteMapping("/{userId}/roles/{roleName}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> removeRoleFromUser(@PathVariable Long userId, 
                                                @PathVariable String roleName) {
         try {
@@ -64,7 +64,7 @@ public class UserRoleController {
      * Get all roles for a user
      */
     @GetMapping("/{userId}/roles")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('STAFF')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('OWNER')")
     public ResponseEntity<Set<Role>> getUserRoles(@PathVariable Long userId) {
         Set<Role> roles = userRoleService.getUserRoles(userId);
         return ResponseEntity.ok(roles);
@@ -74,7 +74,7 @@ public class UserRoleController {
      * Get all users with a specific role
      */
     @GetMapping("/roles/{roleName}/users")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<User>> getUsersByRole(@PathVariable String roleName) {
         try {
             RoleName role = RoleName.valueOf("ROLE_" + roleName.toUpperCase());
@@ -89,7 +89,7 @@ public class UserRoleController {
      * Check if user has a specific role
      */
     @GetMapping("/{userId}/has-role/{roleName}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('STAFF')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('OWNER')")
     public ResponseEntity<Boolean> userHasRole(@PathVariable Long userId, 
                                               @PathVariable String roleName) {
         try {

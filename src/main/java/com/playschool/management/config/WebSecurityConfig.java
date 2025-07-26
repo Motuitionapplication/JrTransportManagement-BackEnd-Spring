@@ -1,8 +1,11 @@
 package com.playschool.management.config;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,31 +34,33 @@ import com.playschool.management.security.services.UserDetailsServiceImpl;
 @EnableMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig {
 
-    @Autowired
-    UserDetailsServiceImpl userDetailsService;
+    private static final Logger logger = LoggerFactory.getLogger(WebSecurityConfig.class);
 
-    @Autowired
-    private AuthEntryPointJwt unauthorizedHandler;
+    private final UserDetailsServiceImpl userDetailsService;
+    private final AuthEntryPointJwt unauthorizedHandler;
+    private final AuthTokenFilter authenticationJwtTokenFilter;
 
-    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:4200,https://playschool-a2z.netlify.app}")
+    public WebSecurityConfig(UserDetailsServiceImpl userDetailsService,
+                             AuthEntryPointJwt unauthorizedHandler,
+                             AuthTokenFilter authenticationJwtTokenFilter) {
+        this.userDetailsService = userDetailsService;
+        this.unauthorizedHandler = unauthorizedHandler;
+        this.authenticationJwtTokenFilter = authenticationJwtTokenFilter;
+    }
+
+    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:4200,https://jr-transport.netlify.app}")
     private String allowedOrigins;
 
-    @Autowired
-    private AuthTokenFilter authenticationJwtTokenFilter;
-
-
-    @SuppressWarnings("deprecation")
     @Bean
-    DaoAuthenticationProvider authenticationProvider() {
+    public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
 
-
     @Bean
-    PasswordEncoder passwordEncoder() {
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
@@ -66,28 +71,23 @@ public class WebSecurityConfig {
                 .build();
     }
 
-    @SuppressWarnings("unused")
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> 
+            .authorizeHttpRequests(auth ->
                 auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                    .requestMatchers("/").permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
-                    .requestMatchers("/api/test/**").permitAll()
-                    .requestMatchers("/api/home/**").permitAll()
-                    .requestMatchers("/api/students/public/**").permitAll()
-                    .requestMatchers("/h2-console/**").permitAll()
+                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                     .anyRequest().authenticated()
             );
 
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authenticationJwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // For H2 Console (remove in production)
+        // For H2 Console (optional: remove for production)
         http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));
 
         return http.build();
@@ -96,23 +96,27 @@ public class WebSecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
-        // Split the comma-separated origins string and trim whitespace
+
+        // Parse allowed origins and remove "*"
         String[] origins = allowedOrigins.split(",");
-        for (int i = 0; i < origins.length; i++) {
-            origins[i] = origins[i].trim();
+        List<String> filteredOrigins = new ArrayList<>();
+        for (String origin : origins) {
+            String trimmed = origin.trim();
+            if (!"*".equals(trimmed)) {
+                filteredOrigins.add(trimmed);
+            }
         }
-        
-        configuration.setAllowedOriginPatterns(Arrays.asList(origins)); // Use patterns instead of origins
+
+        configuration.setAllowedOrigins(filteredOrigins); // ✅ Use exact origins
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L); // Cache preflight response for 1 hour
+        configuration.setMaxAge(3600L); // Cache preflight requests for 1 hour
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-        
-        System.out.println("CORS Configuration - Allowed Origins: " + Arrays.toString(origins));
+
+        logger.info("CORS Configuration - Allowed Origins: {}", filteredOrigins);
         return source;
     }
 }

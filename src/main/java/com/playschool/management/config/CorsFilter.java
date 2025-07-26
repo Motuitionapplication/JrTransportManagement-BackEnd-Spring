@@ -3,6 +3,8 @@ package com.playschool.management.config;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -13,6 +15,8 @@ import java.io.IOException;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class CorsFilter implements Filter {
 
+    private static final Logger logger = LoggerFactory.getLogger(CorsFilter.class);
+
     @Override 
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
         HttpServletResponse response = (HttpServletResponse) res;
@@ -21,7 +25,8 @@ public class CorsFilter implements Filter {
         String origin = request.getHeader("Origin");
         
         // Log the request for debugging
-        System.out.println("CORS Filter - Method: " + request.getMethod() + ", Origin: " + origin + ", URI: " + request.getRequestURI());
+        logger.debug("CORS Filter - Method: {}, Origin: {}, URI: {}", 
+                    request.getMethod(), origin, request.getRequestURI());
         
         // Always set CORS headers for allowed origins
         if (origin != null && (
