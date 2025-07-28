@@ -199,9 +199,12 @@ public class AuthController {
             // Set other vehicle fields if needed
             com.playschool.management.entity.Vehicle savedVehicle = vehicleRepository.save(vehicle);
             
+            
             // Create VehicleOwner mapping
             com.playschool.management.entity.VehicleOwner vehicleOwner = new com.playschool.management.entity.VehicleOwner();
             vehicleOwner.setOwnerId(String.valueOf(savedUser.getId()));
+            vehicleOwner.setEmail(savedUser.getEmail());
+            vehicleOwner.setPhoneNumber(savedUser.getPhoneNumber());
             vehicleOwner.getVehicles().add(savedVehicle);
             // Set other owner fields if needed
             vehicleOwnerRepository.save(vehicleOwner);
