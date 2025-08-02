@@ -183,18 +183,18 @@ public class VehicleOwnerController {
         @ApiResponse(responseCode = "200", description = "Account status updated successfully"),
         @ApiResponse(responseCode = "404", description = "Vehicle owner not found")
     })
-    @PutMapping("/{ownerId}/account-status")
-    public ResponseEntity<VehicleOwner> updateAccountStatus(
+    @PutMapping("/{ownerId}")
+    public ResponseEntity<VehicleOwner> updateOwner(
             @Parameter(description = "Owner ID") @PathVariable String ownerId,
-            @Parameter(description = "Account status") @RequestParam VehicleOwner.AccountStatus status) {
-        
-        log.info("Received request to update account status of owner {} to {}", ownerId, status);
-        
+            @RequestBody VehicleOwner updatedOwner) {
+
+        log.info("Received request to update owner {} with data: {}", ownerId, updatedOwner);
+
         try {
-            VehicleOwner updatedOwner = vehicleOwnerService.updateAccountStatus(ownerId, status);
-            return ResponseEntity.ok(updatedOwner);
+            VehicleOwner savedOwner = vehicleOwnerService.updateOwner(ownerId, updatedOwner);
+            return ResponseEntity.ok(savedOwner);
         } catch (RuntimeException e) {
-            log.error("Error updating account status: {}", e.getMessage());
+            log.error("Error updating owner: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }

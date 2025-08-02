@@ -131,15 +131,14 @@ public class VehicleOwnerService {
     }
     
     // Update account status
-    public VehicleOwner updateAccountStatus(String ownerId, VehicleOwner.AccountStatus status) {
-        log.info("Updating account status of owner {} to {}", ownerId, status);
-        
+    public VehicleOwner updateOwner(String ownerId, VehicleOwner updatedOwner) {
         VehicleOwner owner = vehicleOwnerRepository.findById(ownerId)
-            .orElseThrow(() -> new RuntimeException("Owner not found with ID: " + ownerId));
-        
-        owner.setAccountStatus(status);
-        owner.setUpdatedAt(LocalDateTime.now());
-        
+            .orElseThrow(() -> new RuntimeException("Owner not found"));
+        owner.setFirstName(updatedOwner.getFirstName());
+        owner.setLastName(updatedOwner.getLastName());
+        owner.setEmail(updatedOwner.getEmail());
+        owner.setPhoneNumber(updatedOwner.getPhoneNumber());
+        owner.setAccountStatus(updatedOwner.getAccountStatus());
         return vehicleOwnerRepository.save(owner);
     }
     
