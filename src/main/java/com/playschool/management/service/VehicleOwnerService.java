@@ -1,7 +1,10 @@
 package com.playschool.management.service;
 
+import com.playschool.management.dto.VehicleOwnerDTO;
+import com.playschool.management.entity.Driver;
 import com.playschool.management.entity.VehicleOwner;
 import com.playschool.management.entity.WalletTransaction;
+import com.playschool.management.repository.DriverRepository;
 import com.playschool.management.repository.VehicleOwnerRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +17,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -22,11 +26,13 @@ public class VehicleOwnerService {
     private static final Logger log = LoggerFactory.getLogger(VehicleOwnerService.class);
     private final VehicleOwnerRepository vehicleOwnerRepository;
     private final PasswordEncoder passwordEncoder;
+    private final DriverRepository driverRepository;
     
     // Explicit constructor
-    public VehicleOwnerService(VehicleOwnerRepository vehicleOwnerRepository, PasswordEncoder passwordEncoder) {
+    public VehicleOwnerService(VehicleOwnerRepository vehicleOwnerRepository, PasswordEncoder passwordEncoder, DriverRepository driverRepository) {
         this.vehicleOwnerRepository = vehicleOwnerRepository;
         this.passwordEncoder = passwordEncoder;
+        this.driverRepository = driverRepository;
     }
     
     // Create or update vehicle owner
@@ -74,11 +80,16 @@ public class VehicleOwnerService {
         return Optional.empty();
     }
     
-    // Get all owners
     @Transactional(readOnly = true)
-    public List<VehicleOwner> getAllOwners() {
-        log.info("Fetching all vehicle owners");
-        return vehicleOwnerRepository.findAll();
+
+    public List<VehicleOwnerDTO> getAllOwnerDTOs() {
+
+    return vehicleOwnerRepository.findAll().stream()
+
+    .map(owner -> new VehicleOwnerDTO(owner.getId(), owner.getFirstName(), owner.getLastName(), owner.getEmail(),owner.getPhoneNumber() ))
+
+    .collect(Collectors.toList());
+
     }
     
     // Find owners by verification status
@@ -362,5 +373,46 @@ public class VehicleOwnerService {
         
         public VehicleOwner.AccountStatus getAccountStatus() { return accountStatus; }
         public void setAccountStatus(VehicleOwner.AccountStatus accountStatus) { this.accountStatus = accountStatus; }
+    }
+    
+    // Driver management methods
+    // Create or update driver
+    public Driver saveDriver(Driver driver) {
+        // Optionally encode password if needed
+        if (driver.getPassword() != null) {
+            driver.setPassword(passwordEncoder.encode(driver.getPassword()));
+        }
+        return driverRepository.save(driver);
+    }
+    
+    // Find driver by ID
+    @Transactional(readOnly = true)
+    public Optional<Driver> findDriverById(String driverId) {
+        log.info("Finding driver by ID: {}", driverId);
+        return driverRepository.findById(driverId);
+    }
+    
+    // Get all drivers
+    @Transactional(readOnly = true)
+    public List<Driver> getAllDrivers() {
+        log.info("Fetching all drivers");
+        return driverRepository.findAll();
+    }
+    
+    // Find drivers by vehicle owner
+    @Transactional(readOnly = true)
+    public List<Driver> getDriversByOwner(String ownerId) {
+        log.info("Fetching drivers for owner ID: {}", ownerId);
+        return driverRepository.findByVehicleOwnerId(ownerId);
+    }
+    
+    // Delete driver
+    public void deleteDriver(String driverId) {
+        log.info("Deleting driver with ID: {}", driverId);
+        
+        Driver driver = driverRepository.findById(driverId)
+            .orElseThrow(() -> new RuntimeException("Driver not found with ID: " + driverId));
+        
+        driverRepository.delete(driver);
     }
 }
