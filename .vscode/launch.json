@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "JrTransportManagementApplication",
+            "request": "launch",
+            "mainClass": "com.playschool.management.JrTransportManagementApplication",
+            "projectName": "management-backend"
+        },
+        {
+            "type": "java",
             "name": "Spring Boot-PlaySchoolManagementApplication<management-backend>",
             "request": "launch",
             "cwd": "${workspaceFolder}",

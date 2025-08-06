@@ -1,24 +1,37 @@
 package com.playschool.management.controller;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.playschool.management.dto.DriverDTO;
+import com.playschool.management.dto.VehicleOwnerDTO;
+import com.playschool.management.entity.Driver; // Add this import
 import com.playschool.management.entity.VehicleOwner;
 import com.playschool.management.entity.WalletTransaction;
 import com.playschool.management.service.VehicleOwnerService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import jakarta.validation.Valid;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/vehicle-owners")
@@ -72,11 +85,11 @@ public class VehicleOwnerController {
     @Operation(summary = "Get all vehicle owners", description = "Retrieves all vehicle owners in the system")
     @ApiResponse(responseCode = "200", description = "List of vehicle owners retrieved successfully")
     @GetMapping
-    public ResponseEntity<List<VehicleOwner>> getAllOwners() {
+    public ResponseEntity<List<VehicleOwnerDTO>> getAllOwners() {
         
         log.info("Received request to get all vehicle owners");
         
-        List<VehicleOwner> owners = vehicleOwnerService.getAllOwners();
+        List<VehicleOwnerDTO> owners = vehicleOwnerService.getAllOwnerDTOs();
         return ResponseEntity.ok(owners);
     }
 
@@ -183,18 +196,18 @@ public class VehicleOwnerController {
         @ApiResponse(responseCode = "200", description = "Account status updated successfully"),
         @ApiResponse(responseCode = "404", description = "Vehicle owner not found")
     })
-    @PutMapping("/{ownerId}/account-status")
-    public ResponseEntity<VehicleOwner> updateAccountStatus(
+    @PutMapping("/{ownerId}")
+    public ResponseEntity<VehicleOwner> updateOwner(
             @Parameter(description = "Owner ID") @PathVariable String ownerId,
-            @Parameter(description = "Account status") @RequestParam VehicleOwner.AccountStatus status) {
-        
-        log.info("Received request to update account status of owner {} to {}", ownerId, status);
-        
+            @RequestBody VehicleOwner updatedOwner) {
+
+        log.info("Received request to update owner {} with data: {}", ownerId, updatedOwner);
+
         try {
-            VehicleOwner updatedOwner = vehicleOwnerService.updateAccountStatus(ownerId, status);
-            return ResponseEntity.ok(updatedOwner);
+            VehicleOwner savedOwner = vehicleOwnerService.updateOwner(ownerId, updatedOwner);
+            return ResponseEntity.ok(savedOwner);
         } catch (RuntimeException e) {
-            log.error("Error updating account status: {}", e.getMessage());
+            log.error("Error updating owner: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
@@ -413,4 +426,64 @@ public class VehicleOwnerController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @Operation(summary = "Get drivers by vehicle owner ID", description = "Retrieves all drivers associated with a specific vehicle owner")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "List of drivers retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "Vehicle owner not found")
+    })
+    @GetMapping("/{ownerId}/drivers")
+    public ResponseEntity<List<DriverDTO>> getDriversByOwnerId( // <-- CHANGE 1: Return List<DriverDTO>
+            @Parameter(description = "Owner ID") @PathVariable String ownerId) {
+
+        log.info("Received request to get drivers for vehicle owner: {}", ownerId);
+
+        Optional<VehicleOwner> ownerOpt = vehicleOwnerService.findOwnerById(ownerId);
+        if (ownerOpt.isPresent()) {
+            List<Driver> drivers = ownerOpt.get().getDrivers();
+
+            // CHANGE 2: Convert the list of Driver entities to a list of DriverDTOs
+            List<DriverDTO> driverDTOs = drivers.stream()
+                .map(driver -> new DriverDTO(
+                    driver.getId(),
+                    driver.getFirstName(),
+                    driver.getLastName(),
+                    driver.getEmail(),
+                    driver.getPhoneNumber(),
+                    driver.getStatus().name() // .name() converts the enum to a String
+                ))
+                .collect(Collectors.toList());
+
+            return ResponseEntity.ok(driverDTOs); // <-- CHANGE 3: Return the new DTO list
+
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @Operation(summary = "Add a driver to a vehicle owner", description = "Creates a new driver and associates it with a specific vehicle owner")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Driver created and associated successfully"),
+        @ApiResponse(responseCode = "404", description = "Vehicle owner not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid driver data")
+    })
+    @PostMapping("/{ownerId}/drivers")
+    public ResponseEntity<Driver> addDriverToOwner(
+            @Parameter(description = "Owner ID") @PathVariable String ownerId,
+            @Valid @RequestBody Driver driver) {
+
+        log.info("Received request to add driver to vehicle owner: {}", ownerId);
+
+        Optional<VehicleOwner> ownerOpt = vehicleOwnerService.findOwnerById(ownerId);
+        if (ownerOpt.isPresent()) {
+            VehicleOwner owner = ownerOpt.get();
+            driver.setVehicleOwner(owner);
+            // If you have a DriverService, use it to save the driver. Otherwise, use your repository directly.
+            Driver savedDriver = vehicleOwnerService.saveDriver(driver);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedDriver);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
 }
