@@ -29,6 +29,7 @@ public class Customer {
     public String getFatherName() { return fatherName; }
     public String getUserId() { return userId; }
     public String getPassword() { return password; }
+    
     // Explicit getters for DTO mapping
     public String getId() {
         return id;
@@ -178,6 +179,38 @@ public class Customer {
     
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public void setAddress(VehicleOwner.Address address) {
+        this.address = address;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public void setAlternatePhone(String alternatePhone) {
+        this.alternatePhone = alternatePhone;
+    }
+
+    public void setProfilePhoto(String profilePhoto) {
+        this.profilePhoto = profilePhoto;
+    }
+
+    public AccountStatus getAccountStatus() {
+        return accountStatus;
+    }
+
+    public void setAccountStatus(AccountStatus accountStatus) {
+        this.accountStatus = accountStatus;
+    }
     
     // Enums
     public enum VerificationStatus {
