@@ -1,7 +1,11 @@
 package com.playschool.management.service;
 
-import com.playschool.management.entity.Driver;
-import com.playschool.management.repository.DriverRepository;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,11 +14,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import com.playschool.management.dto.DriverDTO;
+import com.playschool.management.entity.Driver;
+import com.playschool.management.repository.DriverRepository;
 
 @Service
 @Transactional
@@ -51,39 +53,39 @@ public class DriverService {
         return driverRepository.findById(id);
     }
 
-    public Driver updateDriver(String id, Driver driverDetails) {
+    public Driver updateDriver(String id, DriverDTO driverDTO) {
         log.info("Updating driver with id: {}", id);
-        
+
+        // Fetch existing driver
         Driver existingDriver = driverRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Driver not found with id: " + id));
 
-        // Simple update - replace the entity but keep the ID and timestamps
-        try {
-            // Get the ID from existing driver using reflection
-            java.lang.reflect.Field idField = existingDriver.getClass().getDeclaredField("id");
-            idField.setAccessible(true);
-            String existingId = (String) idField.get(existingDriver);
-            
-            // Set ID in new driver details
-            java.lang.reflect.Field newIdField = driverDetails.getClass().getDeclaredField("id");
-            newIdField.setAccessible(true);
-            newIdField.set(driverDetails, existingId);
-            
-            // Get and set creation timestamp
-            java.lang.reflect.Field createdAtField = existingDriver.getClass().getDeclaredField("createdAt");
-            createdAtField.setAccessible(true);
-            Object createdAt = createdAtField.get(existingDriver);
-            
-            java.lang.reflect.Field newCreatedAtField = driverDetails.getClass().getDeclaredField("createdAt");
-            newCreatedAtField.setAccessible(true);
-            newCreatedAtField.set(driverDetails, createdAt);
-        } catch (Exception e) {
-            // If reflection fails, just update what we can
-            log.warn("Could not preserve ID and timestamp during update: {}", e.getMessage());
+        // Apply only non-null fields from DTO
+        if (driverDTO.getFirstName() != null) {
+            existingDriver.setFirstName(driverDTO.getFirstName());
         }
-        
-        return driverRepository.save(driverDetails);
+        if (driverDTO.getLastName() != null) {
+            existingDriver.setLastName(driverDTO.getLastName());
+        }
+        if (driverDTO.getEmail() != null) {
+            existingDriver.setEmail(driverDTO.getEmail());
+        }
+        if (driverDTO.getPhoneNumber() != null) {
+            existingDriver.setPhoneNumber(driverDTO.getPhoneNumber());
+        }
+        if (driverDTO.getStatus() != null) {
+            try {
+                Driver.DriverStatus status = Driver.DriverStatus.valueOf(driverDTO.getStatus());
+                existingDriver.setStatus(status);
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Invalid status value: " + driverDTO.getStatus());
+            }
+        }
+
+        // Save the updated driver
+        return driverRepository.save(existingDriver);
     }
+
 
     public void deleteDriver(String id) {
         log.info("Deleting driver with id: {}", id);

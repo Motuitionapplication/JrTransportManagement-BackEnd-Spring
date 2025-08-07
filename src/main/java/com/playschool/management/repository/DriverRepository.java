@@ -1,15 +1,20 @@
 package com.playschool.management.repository;
 
-import com.playschool.management.entity.Driver;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import com.playschool.management.dto.DriverDTO;
+import com.playschool.management.entity.Driver;
+
+import jakarta.transaction.Transactional;
 
 @Repository
 public interface DriverRepository extends JpaRepository<Driver, String> {
@@ -119,4 +124,23 @@ public interface DriverRepository extends JpaRepository<Driver, String> {
     // Check if identity proof number exists
     @Query("SELECT COUNT(d) > 0 FROM Driver d WHERE d.identityProof.number = :identityNumber")
     boolean existsByIdentityProofNumber(@Param("identityNumber") String identityNumber);
+
+    // Find all drivers by vehicle owner ID
+    List<Driver> findByVehicleOwnerId(String ownerId);
+    
+//    @Query(value = "SELECT * FROM drivers d WHERE d.vehicle_owner_id = :ownerId", nativeQuery = true)
+//    List<Driver> findDriversByOwnerIdWithNativeQuery(String ownerId);
+//    
+    @Modifying
+    @Transactional
+    @Query("UPDATE Driver d SET " +
+           "d.firstName = :#{#dto.firstName}, " +
+           "d.lastName = :#{#dto.lastName}, " +
+           "d.email = :#{#dto.email}, " +
+           "d.phoneNumber = :#{#dto.phoneNumber}, " +
+           "d.status = :#{#dto.status} " +
+           "WHERE d.id = :id")
+    int updateDriverFromDto(@Param("id") String id, @Param("dto") DriverDTO dto);
+
 }
+

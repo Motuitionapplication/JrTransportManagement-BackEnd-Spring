@@ -1,30 +1,44 @@
 package com.playschool.management.controller;
 
-import com.playschool.management.entity.Driver;
-import com.playschool.management.service.DriverService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.playschool.management.dto.DriverDTO;
+import com.playschool.management.entity.Driver;
+import com.playschool.management.service.DriverService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/transport/drivers")
 @Tag(name = "Driver Management", description = "APIs for managing drivers in the transport system")
-@CrossOrigin(origins = "*")
+// @CrossOrigin(origins = "*")
 public class DriverController {
 
     private final DriverService driverService;
@@ -70,22 +84,20 @@ public class DriverController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update driver", description = "Update an existing driver's information")
+    @Operation(summary = "Update driver", description = "Update an existing driver's basic details (first name, last name, email, phone, and status)")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Driver updated successfully"),
+        @ApiResponse(responseCode = "200", description = "Driver updated successfully", content = @Content(schema = @Schema(implementation = Driver.class))),
         @ApiResponse(responseCode = "404", description = "Driver not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     public ResponseEntity<Driver> updateDriver(
-            @PathVariable @Parameter(description = "Driver ID") String id,
-            @Valid @RequestBody Driver driver) {
-        try {
-            Driver updatedDriver = driverService.updateDriver(id, driver);
-            return ResponseEntity.ok(updatedDriver);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+            @PathVariable String id,
+            @RequestBody DriverDTO driverDTO) {
+
+        Driver updatedDriver = driverService.updateDriver(id, driverDTO);
+        return ResponseEntity.ok(updatedDriver);
     }
+
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete driver", description = "Remove a driver from the system")

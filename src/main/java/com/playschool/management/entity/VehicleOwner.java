@@ -10,6 +10,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.math.BigDecimal;
@@ -22,29 +24,28 @@ import java.util.ArrayList;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VehicleOwner {
-    
+
     private static final Logger log = LoggerFactory.getLogger(VehicleOwner.class);
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     // Profile Information
     private String firstName = "";
-    
+
     private String lastName = "";
-    
+
     @Email(message = "Invalid email format")
     @NotBlank(message = "Email is required")
     @Column(unique = true, nullable = false)
     private String email;
-    
+
     @Column(unique = true, nullable = true)
     private String phoneNumber = "";
-    
+
     private String alternatePhone = "";
-    
-    
+
     public List<Vehicle> getVehicles() {
         return vehicles;
     }
@@ -52,138 +53,147 @@ public class VehicleOwner {
     public void setVehicles(List<Vehicle> vehicles) {
         this.vehicles = vehicles;
     }
+
     // Address
     @Embedded
     @AttributeOverrides({
-        @AttributeOverride(name = "street", column = @Column(name = "address_street")),
-        @AttributeOverride(name = "city", column = @Column(name = "address_city")),
-        @AttributeOverride(name = "state", column = @Column(name = "address_state")),
-        @AttributeOverride(name = "pincode", column = @Column(name = "address_pincode")),
-        @AttributeOverride(name = "country", column = @Column(name = "address_country"))
+            @AttributeOverride(name = "street", column = @Column(name = "address_street")),
+            @AttributeOverride(name = "city", column = @Column(name = "address_city")),
+            @AttributeOverride(name = "state", column = @Column(name = "address_state")),
+            @AttributeOverride(name = "pincode", column = @Column(name = "address_pincode")),
+            @AttributeOverride(name = "country", column = @Column(name = "address_country"))
     })
     private Address address;
-    
+
     private String profilePhoto = "";
-    
+
     // Authentication
     @Column(unique = true, nullable = true)
     private String userId = "";
-    
+
     private String password = ""; // This will be hashed
-    
+
     // Business Details
     private String companyName = "";
     private String gstNumber = "";
-    
+
     private String panNumber = "";
-    
+
     // Additional properties that services are expecting
     private String ownerId = ""; // This might be needed for compatibility
     private BigDecimal averageRating = BigDecimal.ZERO;
     private Integer totalRatings = 0;
-    
+
     @Column(name = "owner_verification_notes", nullable = true)
     private String verificationNotes = "";
-    
+
     @Embedded
     @AttributeOverrides({
-        @AttributeOverride(name = "companyName", column = @Column(name = "business_company_name")),
-        @AttributeOverride(name = "gstNumber", column = @Column(name = "business_gst_number")),
-        @AttributeOverride(name = "panNumber", column = @Column(name = "business_pan_number")),
-        @AttributeOverride(name = "businessType", column = @Column(name = "business_type")),
-        @AttributeOverride(name = "registrationNumber", column = @Column(name = "business_registration_number")),
-        @AttributeOverride(name = "incorporationDate", column = @Column(name = "business_incorporation_date")),
-        @AttributeOverride(name = "isVerified", column = @Column(name = "business_verified")),
-        @AttributeOverride(name = "verificationDate", column = @Column(name = "business_verification_date")),
-        @AttributeOverride(name = "verificationNotes", column = @Column(name = "business_verification_notes"))
+            @AttributeOverride(name = "companyName", column = @Column(name = "business_company_name")),
+            @AttributeOverride(name = "gstNumber", column = @Column(name = "business_gst_number")),
+            @AttributeOverride(name = "panNumber", column = @Column(name = "business_pan_number")),
+            @AttributeOverride(name = "businessType", column = @Column(name = "business_type")),
+            @AttributeOverride(name = "registrationNumber", column = @Column(name = "business_registration_number")),
+            @AttributeOverride(name = "incorporationDate", column = @Column(name = "business_incorporation_date")),
+            @AttributeOverride(name = "isVerified", column = @Column(name = "business_verified")),
+            @AttributeOverride(name = "verificationDate", column = @Column(name = "business_verification_date")),
+            @AttributeOverride(name = "verificationNotes", column = @Column(name = "business_verification_notes"))
     })
     private BusinessDetails businessDetails;
-    
+
     @Embedded
     @AttributeOverrides({
-        @AttributeOverride(name = "street", column = @Column(name = "business_street")),
-        @AttributeOverride(name = "city", column = @Column(name = "business_city")),
-        @AttributeOverride(name = "state", column = @Column(name = "business_state")),
-        @AttributeOverride(name = "pincode", column = @Column(name = "business_pincode")),
-        @AttributeOverride(name = "country", column = @Column(name = "business_country"))
+            @AttributeOverride(name = "street", column = @Column(name = "business_street")),
+            @AttributeOverride(name = "city", column = @Column(name = "business_city")),
+            @AttributeOverride(name = "state", column = @Column(name = "business_state")),
+            @AttributeOverride(name = "pincode", column = @Column(name = "business_pincode")),
+            @AttributeOverride(name = "country", column = @Column(name = "business_country"))
     })
     private Address businessAddress;
-    
+
     // Identity Proof
     @Embedded
     @AttributeOverrides({
-        @AttributeOverride(name = "type", column = @Column(name = "identity_type")),
-        @AttributeOverride(name = "number", column = @Column(name = "identity_number")),
-        @AttributeOverride(name = "documentUrl", column = @Column(name = "identity_document_url")),
-        @AttributeOverride(name = "isVerified", column = @Column(name = "identity_verified")),
-        @AttributeOverride(name = "verificationDate", column = @Column(name = "identity_verification_date"))
+            @AttributeOverride(name = "type", column = @Column(name = "identity_type")),
+            @AttributeOverride(name = "number", column = @Column(name = "identity_number")),
+            @AttributeOverride(name = "documentUrl", column = @Column(name = "identity_document_url")),
+            @AttributeOverride(name = "isVerified", column = @Column(name = "identity_verified")),
+            @AttributeOverride(name = "verificationDate", column = @Column(name = "identity_verification_date"))
     })
     private IdentityProof identityProof;
-    
+
     // Bank Details
     @Embedded
     @AttributeOverrides({
-        @AttributeOverride(name = "accountNumber", column = @Column(name = "bank_account_number")),
-        @AttributeOverride(name = "accountHolderName", column = @Column(name = "bank_account_holder_name")),
-        @AttributeOverride(name = "ifscCode", column = @Column(name = "bank_ifsc_code")),
-        @AttributeOverride(name = "bankName", column = @Column(name = "bank_name")),
-        @AttributeOverride(name = "branchName", column = @Column(name = "bank_branch_name")),
-        @AttributeOverride(name = "branchAddress", column = @Column(name = "bank_branch_address")),
-        @AttributeOverride(name = "passbookPhoto", column = @Column(name = "bank_passbook_photo")),
-        @AttributeOverride(name = "isVerified", column = @Column(name = "bank_verified"))
+            @AttributeOverride(name = "accountNumber", column = @Column(name = "bank_account_number")),
+            @AttributeOverride(name = "accountHolderName", column = @Column(name = "bank_account_holder_name")),
+            @AttributeOverride(name = "ifscCode", column = @Column(name = "bank_ifsc_code")),
+            @AttributeOverride(name = "bankName", column = @Column(name = "bank_name")),
+            @AttributeOverride(name = "branchName", column = @Column(name = "bank_branch_name")),
+            @AttributeOverride(name = "branchAddress", column = @Column(name = "bank_branch_address")),
+            @AttributeOverride(name = "passbookPhoto", column = @Column(name = "bank_passbook_photo")),
+            @AttributeOverride(name = "isVerified", column = @Column(name = "bank_verified"))
     })
     private BankDetails bankDetails;
-    
+
     // Vehicle relationships
     @OneToMany(mappedBy = "ownerId", fetch = FetchType.LAZY)
     private List<Vehicle> vehicles = new ArrayList<>();
-    
+
+    // Driver relationships
+    @OneToMany(mappedBy = "vehicleOwner", fetch = FetchType.LAZY)
+    private List<Driver> drivers;
+
+    public void setDrivers(List<Driver> drivers) {
+        this.drivers = drivers;
+    }
+
     // Wallet
     @Column(precision = 10, scale = 2)
     private BigDecimal walletBalance = BigDecimal.ZERO;
-    
+
     @Column(precision = 10, scale = 2)
     private BigDecimal reservedAmount = BigDecimal.ZERO;
-    
+
     @OneToMany(mappedBy = "ownerId", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<WalletTransaction> walletTransactions = new ArrayList<>();
-    
+
     // Service Preferences
     private Boolean emailNotifications = true;
     private Boolean smsNotifications = true;
     private Boolean pushNotifications = true;
     private Boolean trackingEnabled = true;
     private Boolean autoAcceptOrders = false;
-    
+
     // Status and Verification
     @Enumerated(EnumType.STRING)
     private VerificationStatus verificationStatus = VerificationStatus.PENDING;
-    
+
     @Enumerated(EnumType.STRING)
     private AccountStatus accountStatus = AccountStatus.ACTIVE;
-    
+
     // Activity tracking
     private LocalDateTime lastLogin;
-    
+
     @CreationTimestamp
     private LocalDateTime createdAt;
-    
+
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-    
+
     // Enums
     public enum BusinessType {
         INDIVIDUAL, PARTNERSHIP, COMPANY
     }
-    
+
     public enum VerificationStatus {
         PENDING, VERIFIED, REJECTED
     }
-    
+
     public enum AccountStatus {
         ACTIVE, SUSPENDED, BLOCKED
     }
-    
+
     // Embedded classes
     @Embeddable
     @Data
@@ -193,40 +203,50 @@ public class VehicleOwner {
         public String getStreet() {
             return street;
         }
+
         public void setStreet(String street) {
             this.street = street;
         }
+
         public String getCity() {
             return city;
         }
+
         public void setCity(String city) {
             this.city = city;
         }
+
         public String getState() {
             return state;
         }
+
         public void setState(String state) {
             this.state = state;
         }
+
         public String getPincode() {
             return pincode;
         }
+
         public void setPincode(String pincode) {
             this.pincode = pincode;
         }
+
         public String getCountry() {
             return country;
         }
+
         public void setCountry(String country) {
             this.country = country;
         }
+
         private String street;
         private String city;
         private String state;
         private String pincode;
         private String country;
     }
-    
+
     @Embeddable
     @Data
     @NoArgsConstructor
@@ -238,25 +258,25 @@ public class VehicleOwner {
         private String documentUrl;
         private Boolean isVerified = false;
         private LocalDateTime verificationDate;
-        
+
         public enum IdentityType {
             AADHAR, VOTER_ID, PAN_CARD, PASSPORT, GOVT_ID, DRIVING_LICENSE
         }
-        
+
         // Explicit setters for service compatibility
         public void setIsVerified(boolean isVerified) {
             this.isVerified = isVerified;
         }
-        
+
         public void setVerificationDate(LocalDateTime verificationDate) {
             this.verificationDate = verificationDate;
         }
-        
+
         public void setVerificationNotes(String verificationNotes) {
             // This could be added to the class if needed
         }
     }
-    
+
     @Embeddable
     @Data
     @NoArgsConstructor
@@ -271,7 +291,7 @@ public class VehicleOwner {
         private String passbookPhoto;
         private Boolean isVerified = false;
     }
-    
+
     @Embeddable
     @Data
     @NoArgsConstructor
@@ -286,319 +306,319 @@ public class VehicleOwner {
         private Boolean isVerified = false;
         private LocalDateTime verificationDate;
         private String verificationNotes;
-        
+
         // Explicit setters for service compatibility
         public void setCompanyName(String companyName) {
             this.companyName = companyName;
         }
-        
+
         public void setGstNumber(String gstNumber) {
             this.gstNumber = gstNumber;
         }
-        
+
         public void setPanNumber(String panNumber) {
             this.panNumber = panNumber;
         }
-        
+
         public void setBusinessType(BusinessType businessType) {
             this.businessType = businessType;
         }
-        
+
         public void setRegistrationNumber(String registrationNumber) {
             this.registrationNumber = registrationNumber;
         }
-        
+
         public void setIncorporationDate(LocalDate incorporationDate) {
             this.incorporationDate = incorporationDate;
         }
-        
+
         public void setIsVerified(boolean isVerified) {
             this.isVerified = isVerified;
         }
-        
+
         public void setVerificationDate(LocalDateTime verificationDate) {
             this.verificationDate = verificationDate;
         }
-        
+
         public void setVerificationNotes(String verificationNotes) {
             this.verificationNotes = verificationNotes;
         }
     }
-    
+
     // Explicit getters for compatibility
     public String getOwnerId() {
         return this.ownerId != null ? this.ownerId : this.id;
     }
-    
+
     public String getUserId() {
         return this.userId;
     }
-    
+
     public String getPassword() {
         return this.password;
     }
-    
+
     public void setPassword(String password) {
         this.password = password;
     }
-    
+
     public LocalDateTime getCreatedAt() {
         return this.createdAt;
     }
-    
+
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-    
+
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-    
+
     public BigDecimal getAverageRating() {
         return this.averageRating;
     }
-    
+
     public void setAverageRating(BigDecimal averageRating) {
         this.averageRating = averageRating;
     }
-    
+
     public Integer getTotalRatings() {
         return this.totalRatings;
     }
-    
+
     public void setTotalRatings(Integer totalRatings) {
         this.totalRatings = totalRatings;
     }
-    
+
     public String getId() {
-		return id;
-	}
+        return id;
+    }
 
-	public void setId(String id) {
-		this.id = id;
-	}
+    public void setId(String id) {
+        this.id = id;
+    }
 
-	public String getFirstName() {
-		return firstName;
-	}
+    public String getFirstName() {
+        return firstName;
+    }
 
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
 
-	public String getLastName() {
-		return lastName;
-	}
+    public String getLastName() {
+        return lastName;
+    }
 
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
 
-	public String getEmail() {
-		return email;
-	}
+    public String getEmail() {
+        return email;
+    }
 
-	public void setEmail(String email) {
-		this.email = email;
-	}
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-	public String getPhoneNumber() {
-		return phoneNumber;
-	}
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
 
-	public void setPhoneNumber(String phoneNumber) {
-		this.phoneNumber = phoneNumber;
-	}
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
 
-	public String getAlternatePhone() {
-		return alternatePhone;
-	}
+    public String getAlternatePhone() {
+        return alternatePhone;
+    }
 
-	public void setAlternatePhone(String alternatePhone) {
-		this.alternatePhone = alternatePhone;
-	}
+    public void setAlternatePhone(String alternatePhone) {
+        this.alternatePhone = alternatePhone;
+    }
 
-	public Address getAddress() {
-		return address;
-	}
+    public Address getAddress() {
+        return address;
+    }
 
-	public void setAddress(Address address) {
-		this.address = address;
-	}
+    public void setAddress(Address address) {
+        this.address = address;
+    }
 
-	public String getProfilePhoto() {
-		return profilePhoto;
-	}
+    public String getProfilePhoto() {
+        return profilePhoto;
+    }
 
-	public void setProfilePhoto(String profilePhoto) {
-		this.profilePhoto = profilePhoto;
-	}
+    public void setProfilePhoto(String profilePhoto) {
+        this.profilePhoto = profilePhoto;
+    }
 
-	public String getCompanyName() {
-		return companyName;
-	}
+    public String getCompanyName() {
+        return companyName;
+    }
 
-	public void setCompanyName(String companyName) {
-		this.companyName = companyName;
-	}
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
 
-	public String getGstNumber() {
-		return gstNumber;
-	}
+    public String getGstNumber() {
+        return gstNumber;
+    }
 
-	public void setGstNumber(String gstNumber) {
-		this.gstNumber = gstNumber;
-	}
+    public void setGstNumber(String gstNumber) {
+        this.gstNumber = gstNumber;
+    }
 
-	public String getPanNumber() {
-		return panNumber;
-	}
+    public String getPanNumber() {
+        return panNumber;
+    }
 
-	public void setPanNumber(String panNumber) {
-		this.panNumber = panNumber;
-	}
+    public void setPanNumber(String panNumber) {
+        this.panNumber = panNumber;
+    }
 
-	public Address getBusinessAddress() {
-		return businessAddress;
-	}
+    public Address getBusinessAddress() {
+        return businessAddress;
+    }
 
-	public void setBusinessAddress(Address businessAddress) {
-		this.businessAddress = businessAddress;
-	}
+    public void setBusinessAddress(Address businessAddress) {
+        this.businessAddress = businessAddress;
+    }
 
-	public BankDetails getBankDetails() {
-		return bankDetails;
-	}
+    public BankDetails getBankDetails() {
+        return bankDetails;
+    }
 
-	public void setBankDetails(BankDetails bankDetails) {
-		this.bankDetails = bankDetails;
-	}
+    public void setBankDetails(BankDetails bankDetails) {
+        this.bankDetails = bankDetails;
+    }
 
-	public BigDecimal getReservedAmount() {
-		return reservedAmount;
-	}
+    public BigDecimal getReservedAmount() {
+        return reservedAmount;
+    }
 
-	public void setReservedAmount(BigDecimal reservedAmount) {
-		this.reservedAmount = reservedAmount;
-	}
+    public void setReservedAmount(BigDecimal reservedAmount) {
+        this.reservedAmount = reservedAmount;
+    }
 
-	public Boolean getEmailNotifications() {
-		return emailNotifications;
-	}
+    public Boolean getEmailNotifications() {
+        return emailNotifications;
+    }
 
-	public void setEmailNotifications(Boolean emailNotifications) {
-		this.emailNotifications = emailNotifications;
-	}
+    public void setEmailNotifications(Boolean emailNotifications) {
+        this.emailNotifications = emailNotifications;
+    }
 
-	public Boolean getSmsNotifications() {
-		return smsNotifications;
-	}
+    public Boolean getSmsNotifications() {
+        return smsNotifications;
+    }
 
-	public void setSmsNotifications(Boolean smsNotifications) {
-		this.smsNotifications = smsNotifications;
-	}
+    public void setSmsNotifications(Boolean smsNotifications) {
+        this.smsNotifications = smsNotifications;
+    }
 
-	public Boolean getPushNotifications() {
-		return pushNotifications;
-	}
+    public Boolean getPushNotifications() {
+        return pushNotifications;
+    }
 
-	public void setPushNotifications(Boolean pushNotifications) {
-		this.pushNotifications = pushNotifications;
-	}
+    public void setPushNotifications(Boolean pushNotifications) {
+        this.pushNotifications = pushNotifications;
+    }
 
-	public Boolean getTrackingEnabled() {
-		return trackingEnabled;
-	}
+    public Boolean getTrackingEnabled() {
+        return trackingEnabled;
+    }
 
-	public void setTrackingEnabled(Boolean trackingEnabled) {
-		this.trackingEnabled = trackingEnabled;
-	}
+    public void setTrackingEnabled(Boolean trackingEnabled) {
+        this.trackingEnabled = trackingEnabled;
+    }
 
-	public Boolean getAutoAcceptOrders() {
-		return autoAcceptOrders;
-	}
+    public Boolean getAutoAcceptOrders() {
+        return autoAcceptOrders;
+    }
 
-	public void setAutoAcceptOrders(Boolean autoAcceptOrders) {
-		this.autoAcceptOrders = autoAcceptOrders;
-	}
+    public void setAutoAcceptOrders(Boolean autoAcceptOrders) {
+        this.autoAcceptOrders = autoAcceptOrders;
+    }
 
-	public LocalDateTime getLastLogin() {
-		return lastLogin;
-	}
+    public LocalDateTime getLastLogin() {
+        return lastLogin;
+    }
 
-	public void setLastLogin(LocalDateTime lastLogin) {
-		this.lastLogin = lastLogin;
-	}
+    public void setLastLogin(LocalDateTime lastLogin) {
+        this.lastLogin = lastLogin;
+    }
 
-	public static Logger getLog() {
-		return log;
-	}
+    public static Logger getLog() {
+        return log;
+    }
 
-	public LocalDateTime getUpdatedAt() {
-		return updatedAt;
-	}
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
 
-	public void setUserId(String userId) {
-		this.userId = userId;
-	}
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
 
-	public void setBusinessDetails(BusinessDetails businessDetails) {
-		this.businessDetails = businessDetails;
-	}
+    public void setBusinessDetails(BusinessDetails businessDetails) {
+        this.businessDetails = businessDetails;
+    }
 
-	public void setIdentityProof(IdentityProof identityProof) {
-		this.identityProof = identityProof;
-	}
+    public void setIdentityProof(IdentityProof identityProof) {
+        this.identityProof = identityProof;
+    }
 
-	public void setWalletTransactions(List<WalletTransaction> walletTransactions) {
-		this.walletTransactions = walletTransactions;
-	}
+    public void setWalletTransactions(List<WalletTransaction> walletTransactions) {
+        this.walletTransactions = walletTransactions;
+    }
 
-	public String getVerificationNotes() {
+    public String getVerificationNotes() {
         return this.verificationNotes;
     }
-    
+
     public void setVerificationNotes(String verificationNotes) {
         this.verificationNotes = verificationNotes;
     }
-    
+
     public VerificationStatus getVerificationStatus() {
         return this.verificationStatus;
     }
-    
+
     public void setVerificationStatus(VerificationStatus verificationStatus) {
         this.verificationStatus = verificationStatus;
     }
-    
+
     public AccountStatus getAccountStatus() {
         return this.accountStatus;
     }
-    
+
     public void setAccountStatus(AccountStatus accountStatus) {
         this.accountStatus = accountStatus;
     }
-    
+
     public BigDecimal getWalletBalance() {
         return this.walletBalance;
     }
-    
+
     public void setWalletBalance(BigDecimal walletBalance) {
         this.walletBalance = walletBalance;
     }
-    
+
     public List<WalletTransaction> getWalletTransactions() {
         return this.walletTransactions;
     }
-    
+
     public IdentityProof getIdentityProof() {
         return this.identityProof;
     }
-    
+
     public BusinessDetails getBusinessDetails() {
         if (this.businessDetails != null) {
             return this.businessDetails;
         }
-        
+
         // Fallback for backward compatibility
         BusinessDetails details = new BusinessDetails();
         details.setCompanyName(this.companyName);
@@ -612,8 +632,13 @@ public class VehicleOwner {
         details.setVerificationNotes(null);
         return details;
     }
-    
+
     public void setOwnerId(String ownerId) {
         this.ownerId = ownerId;
     }
+
+    public List<Driver> getDrivers() {
+        return drivers;
+    }
+
 }

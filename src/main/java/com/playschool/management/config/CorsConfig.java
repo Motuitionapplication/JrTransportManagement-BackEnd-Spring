@@ -9,27 +9,40 @@ import org.springframework.lang.NonNull;
 @Configuration
 public class CorsConfig {
 
+    private static final String[] ALLOWED_ORIGINS = {
+        "http://localhost:4200",
+        "http://localhost:3000",
+        "https://playschool-a2z.netlify.app"
+    };
+
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
+
             @Override
             public void addCorsMappings(@NonNull CorsRegistry registry) {
+
+                // Application APIs
                 registry.addMapping("/api/**")
-                        .allowedOrigins("http://localhost:4200", "http://localhost:3000", "https://playschool-a2z.netlify.app")
+                        .allowedOrigins(ALLOWED_ORIGINS)
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true)
                         .maxAge(3600);
-                
+
+                // Swagger UI
                 registry.addMapping("/swagger-ui/**")
-                        .allowedOrigins("*")
+                        .allowedOrigins(ALLOWED_ORIGINS)
                         .allowedMethods("GET")
-                        .allowedHeaders("*");
-                        
+                        .allowedHeaders("*")
+                        .allowCredentials(false);
+
+                // Swagger API Docs
                 registry.addMapping("/api-docs/**")
-                        .allowedOrigins("*")
+                        .allowedOrigins(ALLOWED_ORIGINS)
                         .allowedMethods("GET")
-                        .allowedHeaders("*");
+                        .allowedHeaders("*")
+                        .allowCredentials(false);
             }
         };
     }
