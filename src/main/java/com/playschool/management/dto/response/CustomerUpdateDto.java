@@ -1,11 +1,14 @@
 package com.playschool.management.dto.response;
 
-public class CustomerResponseDto {
+import com.playschool.management.entity.Customer;
+
+public class CustomerUpdateDto {
     private String id;
     private String firstName;
     private String lastName;
     private String email;
     private String phoneNumber;
+    private Customer.AccountStatus accountStatus;
     // Add more fields as needed for your API response
 
     public String getId() {
@@ -37,5 +40,13 @@ public class CustomerResponseDto {
     }
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public Customer.AccountStatus getAccountStatus() {
+        return accountStatus;
+    }
+
+    public void setAccountStatus(Customer.AccountStatus accountStatus) {
+        this.accountStatus = accountStatus;
     }
 }
