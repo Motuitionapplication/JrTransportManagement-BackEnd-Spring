@@ -69,7 +69,7 @@ public class VehicleOwner {
 
     // Authentication
     @Column(unique = true, nullable = true)
-    private String userId = "";
+    private String userId ;
 
     private String password = ""; // This will be hashed
 

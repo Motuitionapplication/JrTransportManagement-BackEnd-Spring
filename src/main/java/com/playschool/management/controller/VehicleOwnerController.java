@@ -3,6 +3,7 @@ package com.playschool.management.controller;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -478,6 +479,7 @@ public class VehicleOwnerController {
         if (ownerOpt.isPresent()) {
             VehicleOwner owner = ownerOpt.get();
             driver.setVehicleOwner(owner);
+            driver.setUserId(UUID.randomUUID().toString());
             // If you have a DriverService, use it to save the driver. Otherwise, use your repository directly.
             Driver savedDriver = vehicleOwnerService.saveDriver(driver);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedDriver);
