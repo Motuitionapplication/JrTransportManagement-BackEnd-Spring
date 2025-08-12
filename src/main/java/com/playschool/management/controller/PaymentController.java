@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.playschool.management.dto.request.PaymentRequestDTO;
+import com.playschool.management.dto.response.PaymentResponseDTO;
 import com.playschool.management.entity.Payment;
 import com.playschool.management.service.PaymentService;
 
@@ -32,9 +33,11 @@ public class PaymentController {
 
     // Get all payments for a customer
     @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<Payment>> getPaymentsByCustomer(@PathVariable String customerId) {
-        List<Payment> payments = paymentService.getPaymentsByCustomer(customerId);
-        return ResponseEntity.ok(payments);
+ public ResponseEntity<List<PaymentResponseDTO>> getPaymentsByCustomer(@PathVariable String customerId) {
+        
+        List<PaymentResponseDTO> paymentResponses = paymentService.getPaymentsByCustomerId(customerId);
+        
+        return ResponseEntity.ok(paymentResponses);
     }
 
     // Release payment to driver
@@ -42,5 +45,15 @@ public class PaymentController {
     public ResponseEntity<Payment> releasePaymentToDriver(@PathVariable String paymentId) {
         Payment updatedPayment = paymentService.releasePaymentToDriver(paymentId);
         return ResponseEntity.ok(updatedPayment);
-    }
+    }	
+    
+    //Get payment Records for particular Driver
+    @GetMapping("/driver/{driverId}")
+    public ResponseEntity<List<PaymentResponseDTO>> getPaymentsBydriver(@PathVariable String driverId) {
+           
+           List<PaymentResponseDTO> paymentResponses = paymentService.getPaymentsByDriverId(driverId);
+           
+           return ResponseEntity.ok(paymentResponses);
+       }
+    
 }

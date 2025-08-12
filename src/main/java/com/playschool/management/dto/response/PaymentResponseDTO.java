@@ -3,6 +3,8 @@ package com.playschool.management.dto.response;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.playschool.management.entity.Booking.PaymentStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,7 +16,7 @@ public class PaymentResponseDTO {
     private String paymentId;
     private String transactionId;
     private BigDecimal totalAmount;
-    private String paymentStatus;
+    private PaymentStatus paymentStatus;
     private LocalDateTime createdAt;
 
     public String getPaymentId() {
@@ -41,11 +43,11 @@ public class PaymentResponseDTO {
         this.totalAmount = totalAmount;
     }
 
-    public String getPaymentStatus() {
+    public PaymentStatus getPaymentStatus() {
         return paymentStatus;
     }
 
-    public void setPaymentStatus(String paymentStatus) {
+    public void setPaymentStatus(PaymentStatus paymentStatus) {
         this.paymentStatus = paymentStatus;
     }
 
@@ -56,5 +58,19 @@ public class PaymentResponseDTO {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+	public PaymentResponseDTO(String paymentId, String transactionId, BigDecimal totalAmount,
+			PaymentStatus paymentStatus, LocalDateTime createdAt) {
+		super();
+		this.paymentId = paymentId;
+		this.transactionId = transactionId;
+		this.totalAmount = totalAmount;
+		this.paymentStatus = paymentStatus;
+		this.createdAt = createdAt;
+	}
+    
+
+	
+    
     
 }
