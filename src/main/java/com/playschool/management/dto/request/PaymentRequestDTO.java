@@ -6,10 +6,10 @@ import lombok.Data;
 
 @Data
 public class PaymentRequestDTO {
-        private Long customerId;
-    private Long driverId;
-    private Long ownerId;
-    private Long vehicleId;
+        private String customerId;
+    private String driverId;
+    private String ownerId;
+    private String vehicleId;
 
     private BigDecimal paymentAmount;
     private BigDecimal baseFare;
@@ -25,35 +25,35 @@ public class PaymentRequestDTO {
     private String referenceId;
     private String remarks;
 
-    public Long getCustomerId() {
+    public String getCustomerId() {
         return customerId;
     }
 
-    public void setCustomerId(Long customerId) {
+    public void setCustomerId(String customerId) {
         this.customerId = customerId;
     }
 
-    public Long getDriverId() {
+    public String getDriverId() {
         return driverId;
     }
 
-    public void setDriverId(Long driverId) {
+    public void setDriverId(String driverId) {
         this.driverId = driverId;
     }
 
-    public Long getOwnerId() {
+    public String getOwnerId() {
         return ownerId;
     }
 
-    public void setOwnerId(Long ownerId) {
+    public void setOwnerId(String ownerId) {
         this.ownerId = ownerId;
     }
 
-    public Long getVehicleId() {
+    public String getVehicleId() {
         return vehicleId;
     }
 
-    public void setVehicleId(Long vehicleId) {
+    public void setVehicleId(String vehicleId) {
         this.vehicleId = vehicleId;
     }
 
