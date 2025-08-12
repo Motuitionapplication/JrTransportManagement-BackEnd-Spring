@@ -206,6 +206,10 @@ public class AuthController {
             vehicleOwner.setEmail(savedUser.getEmail());
             vehicleOwner.setPhoneNumber(savedUser.getPhoneNumber());
             vehicleOwner.getVehicles().add(savedVehicle);
+            vehicleOwner.setFirstName(savedUser.getFirstName());
+            vehicleOwner.setLastName(savedUser.getLastName());
+            vehicleOwner.setUserId(String.valueOf(savedUser.getId()));
+
             // Set other owner fields if needed
             vehicleOwnerRepository.save(vehicleOwner);
         }
