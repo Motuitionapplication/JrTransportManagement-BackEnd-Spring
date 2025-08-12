@@ -52,7 +52,7 @@ public class Payment {
     private String paymentMethod; // UPI, Card, Wallet, etc.
 
     @Enumerated(EnumType.STRING)
-    private PaymentStatus paymentStatus = PaymentStatus.COMPLETED;
+    private PaymentStatus paymentStatus = PaymentStatus.COMPLETED ;
 
     @Column(unique = true)
     private String transactionId;
