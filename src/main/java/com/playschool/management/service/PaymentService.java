@@ -1,10 +1,13 @@
 package com.playschool.management.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.playschool.management.dto.request.PaymentRequestDTO;
+import com.playschool.management.dto.response.PaymentResponseDTO;
+import com.playschool.management.entity.Booking.PaymentStatus;
 import com.playschool.management.entity.Customer;
 import com.playschool.management.entity.Driver;
 import com.playschool.management.entity.Payment;
@@ -34,11 +37,11 @@ public class PaymentService {
 
     // 1️⃣ Create new payment from DTO
     public Payment createPayment(PaymentRequestDTO request) {
-        Customer customer = customerRepository.findByUserId(request.getCustomerId())
+        Customer customer = customerRepository.findById(request.getCustomerId())
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
-        Driver driver = driverRepository.findByUserId(request.getDriverId())
+        Driver driver = driverRepository.findById(request.getDriverId())
                 .orElseThrow(() -> new RuntimeException("Driver not found"));
-        VehicleOwner owner = ownerRepository.findByUserId(request.getOwnerId())
+        VehicleOwner owner = ownerRepository.findById(request.getOwnerId())
                 .orElseThrow(() -> new RuntimeException("Owner not found"));
 
         Payment payment = new Payment();
@@ -73,8 +76,31 @@ public class PaymentService {
     }
 
     // 4️⃣ Get payments for a specific customer
-    public List<Payment> getPaymentsByCustomer(String customerId) {
-        return paymentRepository.findByCustomerId(customerId);
+    public List<PaymentResponseDTO> getPaymentsByCustomerId(String customerId) {
+        // 1. Fetch the raw data from the database
+        List<Payment> payments = paymentRepository.findByCustomerId(customerId);
+
+        // 2. Convert each Payment entity into a PaymentResponseDTO
+        return payments.stream()
+                       .map(this::convertToPaymentResponseDto)
+                       .collect(Collectors.toList());
+    }
+    private PaymentResponseDTO convertToPaymentResponseDto(Payment payment) {
+        
+        // 1. Get the Enum, convert it to a String with .name(), then make it uppercase.
+        String statusString = payment.getPaymentStatus().name().toUpperCase();
+
+        // 2. Convert the String to the DTO's PaymentStatus enum.
+        PaymentStatus statusEnum = PaymentStatus.valueOf(statusString);
+
+        // 3. Now call the constructor with the correctly typed enum.
+        return new PaymentResponseDTO(
+            payment.getPaymentId(),
+            payment.getReferenceId(),
+            payment.getPaymentAmount(),
+            statusEnum, 
+            payment.getCreatedAt()
+        );
     }
 
     // 5️⃣ Update payment status
@@ -82,6 +108,16 @@ public class PaymentService {
         Payment payment = getPayment(paymentId);
         payment.setPaymentStatus(Payment.PaymentStatus.valueOf(status.toUpperCase()));
         return paymentRepository.save(payment);
+    }
+    
+    public List<PaymentResponseDTO> getPaymentsByDriverId(String driverId) {
+        // 1. Fetch the raw data from the database
+        List<Payment> payments = paymentRepository.findByDriverId(driverId);
+
+        // 2. Convert each Payment entity into a PaymentResponseDTO
+        return payments.stream()
+                       .map(this::convertToPaymentResponseDto)
+                       .collect(Collectors.toList());
     }
 
     // Release payment to driver
