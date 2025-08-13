@@ -71,4 +71,27 @@ public class AdminController {
         userRepository.save(admin);
         return ResponseEntity.ok(new MessageResponse("Admin updated successfully!"));
     }
+    
+ // Delete admin
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteAdmin(@PathVariable Long id) {
+        Optional<User> adminOpt = userRepository.findById(id);
+
+        if (adminOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        User admin = adminOpt.get();
+        // Ensure this user is actually an admin before deleting
+        boolean isAdmin = admin.getRoles().stream()
+                .anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
+
+        if (!isAdmin) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("The specified user is not an admin."));
+        }
+
+        userRepository.delete(admin);
+        return ResponseEntity.ok(new MessageResponse("Admin deleted successfully!"));
+    }
 }
