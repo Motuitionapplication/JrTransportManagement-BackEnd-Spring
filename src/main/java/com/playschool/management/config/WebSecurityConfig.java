@@ -80,6 +80,7 @@ public class WebSecurityConfig {
             .authorizeHttpRequests(auth ->
                 auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/api/admin/**").permitAll()
                     .requestMatchers("/api/customers/**").permitAll()
                     .requestMatchers("/api/payments/**").permitAll()
                     .requestMatchers("/api/transport/drivers/**").permitAll()
