@@ -137,7 +137,8 @@ public class VehicleOwner {
     private BankDetails bankDetails;
 
     // Vehicle relationships
-    @OneToMany(mappedBy = "ownerId", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<Vehicle> vehicles = new ArrayList<>();
 
     // Driver relationships

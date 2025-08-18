@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import com.playschool.management.dto.DriverDTO;
 import com.playschool.management.entity.Driver;
+import com.playschool.management.entity.VehicleOwner;
 
 import jakarta.transaction.Transactional;
 
@@ -141,6 +142,9 @@ public interface DriverRepository extends JpaRepository<Driver, String> {
            "d.status = :#{#dto.status} " +
            "WHERE d.id = :id")
     int updateDriverFromDto(@Param("id") String id, @Param("dto") DriverDTO dto);
+    
+    List<Driver> findByVehicleOwner(VehicleOwner vehicleOwner);
+
 
 }
 

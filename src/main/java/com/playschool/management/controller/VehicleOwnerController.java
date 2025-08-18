@@ -434,16 +434,15 @@ public class VehicleOwnerController {
         @ApiResponse(responseCode = "404", description = "Vehicle owner not found")
     })
     @GetMapping("/{ownerId}/drivers")
-    public ResponseEntity<List<DriverDTO>> getDriversByOwnerId( // <-- CHANGE 1: Return List<DriverDTO>
-            @Parameter(description = "Owner ID") @PathVariable String ownerId) {
-
+    public ResponseEntity<List<DriverDTO>> getDriversByOwnerId(@PathVariable String ownerId) {
         log.info("Received request to get drivers for vehicle owner: {}", ownerId);
 
-        Optional<VehicleOwner> ownerOpt = vehicleOwnerService.findOwnerById(ownerId);
-        if (ownerOpt.isPresent()) {
-            List<Driver> drivers = ownerOpt.get().getDrivers();
+        // This part calls your service, which correctly populates the transient field
+        List<Driver> drivers = vehicleOwnerService.getDriversByOwner(ownerId); // Assuming this is your service call
 
-            // CHANGE 2: Convert the list of Driver entities to a list of DriverDTOs
+        if (drivers != null && !drivers.isEmpty()) {
+            // --- THIS IS THE CRITICAL CHANGE ---
+            // Convert the list of Driver entities to a list of DriverDTOs
             List<DriverDTO> driverDTOs = drivers.stream()
                 .map(driver -> new DriverDTO(
                     driver.getId(),
@@ -451,11 +450,12 @@ public class VehicleOwnerController {
                     driver.getLastName(),
                     driver.getEmail(),
                     driver.getPhoneNumber(),
-                    driver.getStatus().name() // .name() converts the enum to a String
+                    driver.getStatus().name(),
+                    driver.getAssignedVehicleInfo() // <-- PASS THE NEW FIELD HERE
                 ))
                 .collect(Collectors.toList());
 
-            return ResponseEntity.ok(driverDTOs); // <-- CHANGE 3: Return the new DTO list
+            return ResponseEntity.ok(driverDTOs);
 
         } else {
             return ResponseEntity.notFound().build();

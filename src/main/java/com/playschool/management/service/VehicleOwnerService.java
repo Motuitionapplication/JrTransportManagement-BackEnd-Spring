@@ -1,23 +1,27 @@
 package com.playschool.management.service;
 
-import com.playschool.management.dto.VehicleOwnerDTO;
-import com.playschool.management.entity.Driver;
-import com.playschool.management.entity.VehicleOwner;
-import com.playschool.management.entity.WalletTransaction;
-import com.playschool.management.repository.DriverRepository;
-import com.playschool.management.repository.VehicleOwnerRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.playschool.management.dto.VehicleOwnerDTO;
+import com.playschool.management.entity.Driver;
+import com.playschool.management.entity.Payment;
+import com.playschool.management.entity.VehicleOwner;
+import com.playschool.management.entity.WalletTransaction;
+import com.playschool.management.repository.DriverRepository;
+import com.playschool.management.repository.PaymentRepository;
+import com.playschool.management.repository.VehicleOwnerRepository;
+import com.playschool.management.repository.VehicleRepository;
 
 @Service
 @Transactional
@@ -27,13 +31,23 @@ public class VehicleOwnerService {
     private final VehicleOwnerRepository vehicleOwnerRepository;
     private final PasswordEncoder passwordEncoder;
     private final DriverRepository driverRepository;
+    private final VehicleRepository vehicleRepository;
+    private final PaymentRepository paymentRepository;
+
     
     // Explicit constructor
-    public VehicleOwnerService(VehicleOwnerRepository vehicleOwnerRepository, PasswordEncoder passwordEncoder, DriverRepository driverRepository) {
-        this.vehicleOwnerRepository = vehicleOwnerRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.driverRepository = driverRepository;
-    }
+	public VehicleOwnerService(VehicleOwnerRepository vehicleOwnerRepository, PasswordEncoder passwordEncoder,
+			DriverRepository driverRepository, VehicleRepository vehicleRepository,
+			PaymentRepository paymentRepository) {
+		super();
+		this.vehicleOwnerRepository = vehicleOwnerRepository;
+		this.passwordEncoder = passwordEncoder;
+		this.driverRepository = driverRepository;
+		this.vehicleRepository = vehicleRepository;
+		this.paymentRepository = paymentRepository;
+	}
+    
+    
     
     // Create or update vehicle owner
     public VehicleOwner saveVehicleOwner(VehicleOwner owner) {
@@ -47,11 +61,20 @@ public class VehicleOwnerService {
             }
         }
         owner.setUpdatedAt(LocalDateTime.now());
+        if (owner.getVehicles() != null && !owner.getVehicles().isEmpty()) {
+        	owner.getVehicles().forEach(vehicle -> vehicle.setOwner(owner));
+        }
         
         return vehicleOwnerRepository.save(owner);
     }
     
-    // Find owner by ID
+    
+
+
+
+
+
+	// Find owner by ID
     @Transactional(readOnly = true)
     public Optional<VehicleOwner> findOwnerById(String ownerId) {
         log.info("Finding owner by ID: {}", ownerId);
@@ -317,15 +340,24 @@ public class VehicleOwnerService {
     }
     
     // Delete owner
+    @Transactional
     public void deleteOwner(String ownerId) {
-        log.info("Deleting owner with ID: {}", ownerId);
-        
         VehicleOwner owner = vehicleOwnerRepository.findById(ownerId)
-            .orElseThrow(() -> new RuntimeException("Owner not found with ID: " + ownerId));
+            .orElseThrow(() -> new RuntimeException("Owner not found with id: " + ownerId));
+
+        // 1. Delete associated payments (assuming you have a method to find them)
+        List<Payment> payments = paymentRepository.findByVehicleOwner(owner);
+        paymentRepository.deleteAll(payments);
+
+        // 2. Delete associated drivers
+        List<Driver> drivers = driverRepository.findByVehicleOwner(owner);
+        driverRepository.deleteAll(drivers);
         
-        // Check if owner can be deleted (no active vehicles or bookings)
-        // Additional validation logic can be added here
-        
+        // 3. (Optional) Delete associated vehicles
+        // List<Vehicle> vehicles = vehicleRepository.findByOwner(owner);
+        // vehicleRepository.deleteAll(vehicles);
+
+        // 4. Finally, delete the owner
         vehicleOwnerRepository.delete(owner);
     }
     
@@ -398,12 +430,41 @@ public class VehicleOwnerService {
         log.info("Fetching all drivers");
         return driverRepository.findAll();
     }
+
     
     // Find drivers by vehicle owner
     @Transactional(readOnly = true)
     public List<Driver> getDriversByOwner(String ownerId) {
         log.info("Fetching drivers for owner ID: {}", ownerId);
-        return driverRepository.findByVehicleOwnerId(ownerId);
+        
+        List<Driver> drivers = driverRepository.findByVehicleOwnerId(ownerId);
+
+        drivers.forEach(driver -> {
+            String vehicleInfo = "N/A"; // Default value
+
+            // --- THIS IS THE CORRECTED LOGIC ---
+            // Use the 'currentVehicle' field
+            String currentVehicleId = driver.getCurrentVehicle();
+
+            if (currentVehicleId != null && !currentVehicleId.isEmpty()) {
+                // Find the vehicle by its ID
+                vehicleRepository.findById(currentVehicleId).ifPresent(vehicle -> {
+                    // If vehicle is found, create the display string and set it
+                    String info = String.format("%s (%s %s)", 
+                        vehicle.getVehicleNumber(), 
+                        vehicle.getManufacturer(), 
+                        vehicle.getModel());
+                    driver.setAssignedVehicleInfo(info);
+                });
+            }
+            
+            // If vehicle isn't found or driver has no current vehicle, set the default
+            if (driver.getAssignedVehicleInfo() == null) {
+                driver.setAssignedVehicleInfo(vehicleInfo);
+            }
+        });
+
+        return drivers;
     }
     
     // Delete driver

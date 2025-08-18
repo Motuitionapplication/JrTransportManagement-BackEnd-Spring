@@ -7,17 +7,22 @@ public class DriverDTO {
     private String email;
     private String phoneNumber;
     private String status;
+    private String assignedVehicleInfo;
 
-    public DriverDTO(String id, String firstName, String lastName, String email, String phoneNumber, String status) {
-        this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.phoneNumber = phoneNumber;
-        this.status = status;
-    }
+    
 
-    public String getId() {
+    public DriverDTO(String id, String firstName, String lastName, String email, String phoneNumber, String status,
+			String assignedVehicleInfo) {
+		super();
+		this.id = id;
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.email = email;
+		this.phoneNumber = phoneNumber;
+		this.status = status;
+		this.assignedVehicleInfo = assignedVehicleInfo;
+	}
+	public String getId() {
         return id;
     }
     public void setId(String id) {
@@ -53,4 +58,11 @@ public class DriverDTO {
     public void setStatus(String status) {
         this.status = status;
     }
+	public String getAssignedVehicleInfo() {
+		return assignedVehicleInfo;
+	}
+	public void setAssignedVehicleInfo(String assignedVehicleInfo) {
+		this.assignedVehicleInfo = assignedVehicleInfo;
+	}
+    
 }

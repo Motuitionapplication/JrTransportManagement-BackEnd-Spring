@@ -31,6 +31,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -82,6 +83,9 @@ public class Driver {
     @NotNull(message = "Date of birth is required")
     private LocalDate dateOfBirth;
     
+    @Transient
+    private String assignedVehicleInfo;
+    
     @Embedded
     @AttributeOverrides({
         @AttributeOverride(name = "name", column = @Column(name = "emergency_contact_name")),
@@ -90,7 +94,15 @@ public class Driver {
     })
     private EmergencyContact emergencyContact;
     
-    @Column(unique = true, nullable = false)
+    public String getAssignedVehicleInfo() {
+		return assignedVehicleInfo;
+	}
+
+	public void setAssignedVehicleInfo(String assignedVehicleInfo) {
+		this.assignedVehicleInfo = assignedVehicleInfo;
+	}
+
+	@Column(unique = true, nullable = false)
     private String userId;
     
     @NotBlank(message = "Password is required")
