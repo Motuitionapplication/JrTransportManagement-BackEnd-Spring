@@ -36,6 +36,7 @@ public class DriverService {
         this.driverRepository = driverRepository;
         this.vehicleRepository = vehicleRepository; 
     }
+    public enum DriverStatus { AVAILABLE, ON_TRIP, OFF_DUTY, BREAK }
 
     // Basic CRUD operations
     public Driver createDriver(Driver driver) {
@@ -349,4 +350,31 @@ public class DriverService {
         vehicleRepository.save(vehicle);
         return driverRepository.save(driver);
     }
+    public Driver unassignVehicle(String driverId) {
+        Driver driver = driverRepository.findById(driverId)
+            .orElseThrow(() -> new EntityNotFoundException("Driver not found with id " + driverId));
+
+        // If the driver currently has a vehicle assigned, update the vehicle record
+        if (driver.getCurrentVehicle() != null) {
+            String vehicleId = driver.getCurrentVehicle();
+            Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new EntityNotFoundException("Vehicle not found with id " + vehicleId));
+            
+            // Remove driver reference from vehicle
+            vehicle.setDriverId(null);
+            vehicleRepository.save(vehicle);
+        }
+
+        // Remove current vehicle from driver
+        driver.setCurrentVehicle(null);
+
+        // Set driver status to AVAILABLE
+        driver.setStatus(Driver.DriverStatus.AVAILABLE);
+
+        // Clear the assigned vehicles list
+        driver.getAssignedVehicles().clear();
+
+        return driverRepository.save(driver);
+    }
+
 }

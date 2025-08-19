@@ -437,4 +437,20 @@ public class DriverController {
             return ResponseEntity.badRequest().build();
         }
     }
+    @PatchMapping("/{driverId}/unassign-vehicle")
+    @Operation(summary = "Unassign the current vehicle from a driver", description = "Removes the vehicle assignment from the driver, updating both currentVehicle and assignedVehicles list.")
+    public ResponseEntity<Driver> unassignVehicleFromDriver(
+            @Parameter(description = "ID of the driver") @PathVariable String driverId) {
+
+        log.info("Received request to unassign vehicle from driver {}", driverId);
+
+        try {
+            Driver updatedDriver = driverService.unassignVehicle(driverId);
+            return ResponseEntity.ok(updatedDriver);
+        } catch (Exception e) {
+            log.error("Error unassigning vehicle from driver: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
 }
