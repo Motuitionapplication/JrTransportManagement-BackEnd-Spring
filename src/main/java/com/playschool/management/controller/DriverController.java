@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.playschool.management.dto.DriverDTO;
+import com.playschool.management.dto.request.AssignVehicleRequestDTO;
 import com.playschool.management.entity.Driver;
 import com.playschool.management.service.DriverService;
 
@@ -415,4 +418,39 @@ public class DriverController {
             return ResponseEntity.notFound().build();
         }
     }
+    private static final Logger log = LoggerFactory.getLogger(DriverService.class);
+
+    @PatchMapping("/{driverId}/assign-vehicle")
+    @Operation(summary = "Assign a vehicle to a driver", description = "Updates both the driver's assigned vehicles and the vehicle's driverId.")
+    public ResponseEntity<Driver> assignVehicleToDriver(
+            @Parameter(description = "ID of the driver") @PathVariable String driverId,
+            @Valid @RequestBody AssignVehicleRequestDTO request) {
+
+        log.info("Received request to assign vehicle {} to driver {}", request.getVehicleId(), driverId);
+
+        try {
+            Driver updatedDriver = driverService.assignVehicle(driverId, request.getVehicleId());
+            return ResponseEntity.ok(updatedDriver);
+        } catch (Exception e) {
+            log.error("Error assigning vehicle to driver: {}", e.getMessage());
+            // You can add more specific exception handling for 404 Not Found, 409 Conflict, etc.
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    @PatchMapping("/{driverId}/unassign-vehicle")
+    @Operation(summary = "Unassign the current vehicle from a driver", description = "Removes the vehicle assignment from the driver, updating both currentVehicle and assignedVehicles list.")
+    public ResponseEntity<Driver> unassignVehicleFromDriver(
+            @Parameter(description = "ID of the driver") @PathVariable String driverId) {
+
+        log.info("Received request to unassign vehicle from driver {}", driverId);
+
+        try {
+            Driver updatedDriver = driverService.unassignVehicle(driverId);
+            return ResponseEntity.ok(updatedDriver);
+        } catch (Exception e) {
+            log.error("Error unassigning vehicle from driver: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
 }

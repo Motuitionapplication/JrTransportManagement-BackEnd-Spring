@@ -16,7 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.playschool.management.dto.DriverDTO;
 import com.playschool.management.entity.Driver;
+import com.playschool.management.entity.Vehicle;
 import com.playschool.management.repository.DriverRepository;
+import com.playschool.management.repository.VehicleRepository;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 @Transactional
@@ -25,11 +29,14 @@ public class DriverService {
     private static final Logger log = LoggerFactory.getLogger(DriverService.class);
     
     private final DriverRepository driverRepository;
+    private final VehicleRepository vehicleRepository;
     
     @Autowired
-    public DriverService(DriverRepository driverRepository) {
+    public DriverService(DriverRepository driverRepository, VehicleRepository vehicleRepository) { 
         this.driverRepository = driverRepository;
+        this.vehicleRepository = vehicleRepository; 
     }
+    public enum DriverStatus { AVAILABLE, ON_TRIP, OFF_DUTY, BREAK }
 
     // Basic CRUD operations
     public Driver createDriver(Driver driver) {
@@ -302,4 +309,72 @@ public class DriverService {
         }
         return driverRepository.save(driver);
     }
+    @Transactional
+    public Driver assignVehicle(String driverId, String vehicleId) {
+        // 1. Fetch the driver and vehicle from the database.
+        // If either is not found, an exception is thrown.
+        Driver driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new EntityNotFoundException("Driver not found with ID: " + driverId));
+
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new EntityNotFoundException("Vehicle not found with ID: " + vehicleId));
+
+        // 2. Validate that the vehicle is not already assigned to someone else.
+        if (vehicle.getDriverId() != null && !vehicle.getDriverId().isEmpty()) {
+            if (vehicle.getDriverId().equals(driverId)) {
+                // The vehicle is already assigned to this driver, so no change is needed.
+                return driver;
+            } else {
+                // The vehicle is assigned to a different driver, which is an error.
+                throw new IllegalStateException("Vehicle " + vehicleId + " is already assigned to another driver.");
+            }
+        }
+
+        // 3. Update both the driver and the vehicle entities.
+        
+        // Add the vehicle to the driver's list of assigned vehicles.
+        if (!driver.getAssignedVehicles().contains(vehicleId)) {
+            driver.getAssignedVehicles().add(vehicleId);
+        }
+        
+        // Set the driver's current vehicle and update their status.
+        driver.setCurrentVehicle(vehicleId);
+        driver.setStatus(Driver.DriverStatus.ON_TRIP);
+
+        // Set the driver's ID on the vehicle and update its status.
+        vehicle.setDriverId(driverId);
+        vehicle.setStatus(Vehicle.VehicleStatus.IN_TRANSIT);
+
+        // 4. Save the changes to the database.
+        // @Transactional ensures both saves happen successfully or neither does.
+        vehicleRepository.save(vehicle);
+        return driverRepository.save(driver);
+    }
+    public Driver unassignVehicle(String driverId) {
+        Driver driver = driverRepository.findById(driverId)
+            .orElseThrow(() -> new EntityNotFoundException("Driver not found with id " + driverId));
+
+        // If the driver currently has a vehicle assigned, update the vehicle record
+        if (driver.getCurrentVehicle() != null) {
+            String vehicleId = driver.getCurrentVehicle();
+            Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new EntityNotFoundException("Vehicle not found with id " + vehicleId));
+            
+            // Remove driver reference from vehicle
+            vehicle.setDriverId(null);
+            vehicleRepository.save(vehicle);
+        }
+
+        // Remove current vehicle from driver
+        driver.setCurrentVehicle(null);
+
+        // Set driver status to AVAILABLE
+        driver.setStatus(Driver.DriverStatus.AVAILABLE);
+
+        // Clear the assigned vehicles list
+        driver.getAssignedVehicles().clear();
+
+        return driverRepository.save(driver);
+    }
+
 }

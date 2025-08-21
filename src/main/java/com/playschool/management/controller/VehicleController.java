@@ -1,30 +1,41 @@
 package com.playschool.management.controller;
 
-import com.playschool.management.entity.Vehicle;
-import com.playschool.management.service.VehicleService;
-import com.playschool.management.constants.ApplicationConstants;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.playschool.management.constants.ApplicationConstants;
+import com.playschool.management.dto.response.VehicleResponseDTO;
+import com.playschool.management.entity.Vehicle;
+import com.playschool.management.service.VehicleService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/vehicles")
 @Tag(name = "Vehicle Management", description = "APIs for managing vehicles in the transport system")
-@CrossOrigin(origins = "*")
+//@CrossOrigin(origins = "*")
 public class VehicleController {
 
     private static final Logger log = LoggerFactory.getLogger(VehicleController.class);
@@ -87,12 +98,12 @@ public class VehicleController {
     @Operation(summary = "Get vehicles by owner", description = "Retrieves all vehicles owned by a specific owner")
     @ApiResponse(responseCode = "200", description = "List of vehicles retrieved successfully")
     @GetMapping("/owner/{ownerId}")
-    public ResponseEntity<List<Vehicle>> getVehiclesByOwner(
+    public ResponseEntity<List<VehicleResponseDTO>> getVehiclesByOwner(
             @Parameter(description = "Owner ID") @PathVariable String ownerId) {
         
         log.info("Received request to get vehicles for owner: {}", ownerId);
         
-        List<Vehicle> vehicles = vehicleService.getVehiclesByOwner(ownerId);
+        List<VehicleResponseDTO> vehicles = vehicleService.getVehiclesByOwner(ownerId);
         return ResponseEntity.ok(vehicles);
     }
 

@@ -1,19 +1,20 @@
 package com.playschool.management.service;
 
-import com.playschool.management.entity.Vehicle;
-import com.playschool.management.repository.VehicleRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.playschool.management.dto.response.VehicleResponseDTO;
+import com.playschool.management.entity.Vehicle;
+import com.playschool.management.repository.VehicleRepository;
 
 @Service
 public class VehicleService {
@@ -55,11 +56,27 @@ public class VehicleService {
     
     // Find vehicles by owner
     @Transactional(readOnly = true)
-    public List<Vehicle> getVehiclesByOwner(String ownerId) {
+    public List<VehicleResponseDTO> getVehiclesByOwner(String ownerId) {
         log.info("Fetching vehicles for owner: {}", ownerId);
-        return vehicleRepository.findByOwnerId(ownerId);
+        
+        // 1. Fetch the list of Vehicle entities from the database
+        List<Vehicle> vehicles = vehicleRepository.findByOwnerId(ownerId);
+
+        // 2. Convert each Vehicle entity into a VehicleResponseDTO
+        return vehicles.stream()
+                .map(vehicle -> new VehicleResponseDTO(
+                		vehicle.getId(),
+                        vehicle.getVehicleNumber(),
+                        vehicle.getManufacturer(),
+                        vehicle.getModel(),
+                        vehicle.getVehicleType() != null ? vehicle.getVehicleType().name() : null,
+                        vehicle.getCapacity(),
+                        vehicle.getStatus(),
+                        vehicle.getInsurance() != null ? vehicle.getInsurance().getExpiryDate() : null,
+                        vehicle.getDriverId() // <-- THE ONLY CHANGE NEEDED
+                ))
+                .collect(Collectors.toList());
     }
-    
     // Find vehicles by type
     @Transactional(readOnly = true)
     public List<Vehicle> getVehiclesByType(String vehicleType) {
@@ -93,7 +110,7 @@ public class VehicleService {
     @Transactional(readOnly = true)
     public List<Vehicle> getVehiclesWithExpiringDocuments(LocalDate beforeDate) {
         log.info("Fetching vehicles with documents expiring before: {}", beforeDate);
-        return vehicleRepository.findVehiclesWithExpiringDocuments(beforeDate);
+        return vehicleRepository.findVehiclesWithDocumentsExpiringBefore(beforeDate);
     }
     
     // Find verified vehicles
