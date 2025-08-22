@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import com.playschool.management.dto.CustomerCreateDto;
 import com.playschool.management.dto.CustomerResponseDto;
 import com.playschool.management.dto.response.CustomerUpdateDto;
 import com.playschool.management.entity.Customer;
@@ -73,5 +74,11 @@ public class CustomerController {
     public ResponseEntity<Void> deleteCustomer(@PathVariable String customerId) {
         boolean deleted = customerService.deleteCustomerById(customerId);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    @Operation(summary = "Register a new customer", description = "Creates a new customer in the system")
+    @PutMapping
+    public ResponseEntity<CustomerResponseDto> addCustomer(@Valid @RequestBody CustomerCreateDto dto) {
+        return ResponseEntity.ok(customerService.addCustomer(dto));
     }
 }

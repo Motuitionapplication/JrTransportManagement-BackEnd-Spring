@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.playschool.management.dto.CustomerCreateDto;
 import com.playschool.management.dto.CustomerResponseDto;
 import com.playschool.management.dto.response.CustomerUpdateDto;
 import com.playschool.management.entity.Customer;
@@ -24,6 +26,10 @@ public class CustomerServiceImpl implements CustomerService {
     public List<Customer> getAllCustomers() {
         return customerRepository.findAll();
     }
+
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public Optional<Customer> getCustomerById(String id) {
@@ -96,7 +102,35 @@ public class CustomerServiceImpl implements CustomerService {
     // ──────────────────────────────────────────────────────────────────────
     // ✅ ADD CUSTOMER
     @Override
-    public Customer saveCustomer(Customer customer) {
-        return customerRepository.save(customer);
+    public CustomerResponseDto addCustomer(CustomerCreateDto dto) {
+
+        // ─── Duplicate checks ─────────────────────────
+        if (customerRepository.existsByEmail(dto.getEmail())) {
+            throw new RuntimeException("Email already in use: " + dto.getEmail());
+        }
+        if (customerRepository.existsByPhoneNumber(dto.getPhoneNumber())) {
+            throw new RuntimeException("Phone number already in use: " + dto.getPhoneNumber());
+        }
+        if (customerRepository.existsByUserId(String.valueOf(dto.getUserId()))) { 
+            throw new RuntimeException("UserId already in use: " + dto.getUserId());
+        }
+
+        Customer customer = new Customer();
+        customer.setFirstName(dto.getFirstName());
+        customer.setLastName(dto.getLastName());
+        customer.setFatherName(dto.getFatherName());
+        customer.setEmail(dto.getEmail());
+        customer.setUserId(dto.getUserId());
+        customer.setPassword(passwordEncoder.encode(dto.getPassword())); // encrypt password
+        customer.setPhoneNumber(dto.getPhoneNumber());
+        customer.setAlternatePhone(dto.getAlternatePhone());
+        customer.setProfilePhoto(dto.getProfilePhoto());
+
+        // default values
+        customer.setAccountStatus(Customer.AccountStatus.ACTIVE);
+        customer.setVerificationStatus(Customer.VerificationStatus.PENDING);
+
+        Customer saved = customerRepository.save(customer);
+        return mapToResponseDto(saved);
     }
 }
