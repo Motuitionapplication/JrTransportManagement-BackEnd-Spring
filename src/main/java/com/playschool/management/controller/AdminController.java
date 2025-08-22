@@ -94,4 +94,45 @@ public class AdminController {
         userRepository.delete(admin);
         return ResponseEntity.ok(new MessageResponse("Admin deleted successfully!"));
     }
+ // Fetch current password for admin (for testing only, not recommended for production)
+ @GetMapping("/password/{id}")
+ public ResponseEntity<?> getAdminPassword(@PathVariable Long id) {
+     Optional<User> adminOpt = userRepository.findById(id);
+     if (adminOpt.isEmpty()) {
+         return ResponseEntity.notFound().build();
+     }
+     User admin = adminOpt.get();
+     boolean isAdmin = admin.getRoles().stream()
+             .anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
+
+     if (!isAdmin) {
+         return ResponseEntity.badRequest()
+                 .body(new MessageResponse("The specified user is not an admin."));
+     }
+
+     // WARNING: Never expose plain passwords in production!
+     return ResponseEntity.ok(new MessageResponse(admin.getPassword()));
+ }
+//Change admin password
+@PutMapping("/change-password/{id}")
+public ResponseEntity<?> changeAdminPassword(@PathVariable Long id, @RequestBody User user) {
+  Optional<User> adminOpt = userRepository.findById(id);
+  if (adminOpt.isEmpty()) {
+      return ResponseEntity.notFound().build();
+  }
+  User admin = adminOpt.get();
+  boolean isAdmin = admin.getRoles().stream()
+          .anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
+
+  if (!isAdmin) {
+      return ResponseEntity.badRequest()
+              .body(new MessageResponse("The specified user is not an admin."));
+  }
+
+  admin.setPassword(user.getPassword()); // You may want to hash the password here!
+  userRepository.save(admin);
+  return ResponseEntity.ok(new MessageResponse("Password updated successfully!"));
+}
+
+    
 }
