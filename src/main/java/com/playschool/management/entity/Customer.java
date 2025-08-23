@@ -211,6 +211,19 @@ public class Customer {
     public void setAccountStatus(AccountStatus accountStatus) {
         this.accountStatus = accountStatus;
     }
+
+    public void setFatherName(String fatherName) {
+        this.fatherName = fatherName;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setVerificationStatus(VerificationStatus verificationStatus) {
+        this.verificationStatus = verificationStatus;
+    }
+
     
     // Enums
     public enum VerificationStatus {
