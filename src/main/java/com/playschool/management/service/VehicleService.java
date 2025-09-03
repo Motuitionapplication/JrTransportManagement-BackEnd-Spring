@@ -9,18 +9,28 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.playschool.management.dto.response.VehicleResponseDTO;
+import com.playschool.management.entity.AssignmentHistory;
 import com.playschool.management.entity.Vehicle;
+import com.playschool.management.repository.AssignmentHistoryRepository;
 import com.playschool.management.repository.VehicleRepository;
 
 @Service
 public class VehicleService {
     
     private static final Logger log = LoggerFactory.getLogger(VehicleService.class);
+    
+    @Autowired
     private final VehicleRepository vehicleRepository;
+    
+   
+    
+    @Autowired
+    private AssignmentHistoryRepository assignmentHistoryRepository;
     
     // Explicit constructor
     public VehicleService(VehicleRepository vehicleRepository) {
@@ -59,23 +69,36 @@ public class VehicleService {
     public List<VehicleResponseDTO> getVehiclesByOwner(String ownerId) {
         log.info("Fetching vehicles for owner: {}", ownerId);
         
-        // 1. Fetch the list of Vehicle entities from the database
+        // 1. Fetch the list of Vehicle entities as before
         List<Vehicle> vehicles = vehicleRepository.findByOwnerId(ownerId);
 
-        // 2. Convert each Vehicle entity into a VehicleResponseDTO
-        return vehicles.stream()
-                .map(vehicle -> new VehicleResponseDTO(
-                		vehicle.getId(),
-                        vehicle.getVehicleNumber(),
-                        vehicle.getManufacturer(),
-                        vehicle.getModel(),
-                        vehicle.getVehicleType() != null ? vehicle.getVehicleType().name() : null,
-                        vehicle.getCapacity(),
-                        vehicle.getStatus(),
-                        vehicle.getInsurance() != null ? vehicle.getInsurance().getExpiryDate() : null,
-                        vehicle.getDriverId() // <-- THE ONLY CHANGE NEEDED
-                ))
-                .collect(Collectors.toList());
+        // 2. For each vehicle, look up its active assignment to find the driver ID
+        return vehicles.stream().map(vehicle -> {
+            
+            // --- THIS IS THE FIX ---
+            // Find the active assignment for the current vehicle in the loop
+            Optional<AssignmentHistory> activeAssignmentOpt = 
+                assignmentHistoryRepository.findByVehicleAndIsActiveTrue(vehicle);
+
+            // If an assignment is found, get the driver's ID from it. Otherwise, it's null.
+            String driverId = activeAssignmentOpt
+                .map(assignment -> assignment.getDriver().getId())
+                .orElse(null);
+            // -----------------------
+
+            // 3. Create the DTO with the now-correct driverId
+            return new VehicleResponseDTO(
+                    vehicle.getId(),
+                    vehicle.getVehicleNumber(),
+                    vehicle.getManufacturer(),
+                    vehicle.getModel(),
+                    vehicle.getVehicleType() != null ? vehicle.getVehicleType().name() : null,
+                    vehicle.getCapacity(),
+                    vehicle.getStatus(),
+                    vehicle.getInsurance() != null ? vehicle.getInsurance().getExpiryDate() : null,
+                    driverId // <-- Use the driverId we just found
+            );
+        }).collect(Collectors.toList());
     }
     // Find vehicles by type
     @Transactional(readOnly = true)

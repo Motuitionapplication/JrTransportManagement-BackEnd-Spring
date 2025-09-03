@@ -41,7 +41,7 @@ public class Vehicle {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     
-    @Column(unique = true, nullable = true)
+    @Column(unique = false, nullable = true)
     private String vehicleNumber = "";
     
     @Enumerated(EnumType.STRING)
@@ -53,6 +53,12 @@ public class Vehicle {
     
     @Column(nullable = true)
     private String manufacturer = "";
+    
+//    @Column(name = "assignment_from_date", nullable = true)
+//    private LocalDate from;
+//
+//    @Column(name = "assignment_to_date", nullable = true)
+//    private LocalDate to;
     
     public String getModel() {
 		return model;
@@ -98,8 +104,8 @@ public class Vehicle {
     @JsonBackReference
     private VehicleOwner owner;
     
-    @Column(nullable = true)
-    private String driverId = "";
+//    @Column(nullable = true)
+//    private String driverId = "";
     
     // Document details as embedded objects
     @Embedded
@@ -347,13 +353,12 @@ public class Vehicle {
 		this.owner = owner;
 	}
 
-	public String getDriverId() {
-		return driverId;
+	
+	public void setId(String id) {
+		this.id = id;
 	}
-
-	public void setDriverId(String driverId) {
-		this.driverId = driverId;
-	}
+	
+	
 	
     
 }

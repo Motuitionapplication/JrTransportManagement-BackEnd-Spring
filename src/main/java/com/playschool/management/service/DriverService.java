@@ -3,6 +3,7 @@ package com.playschool.management.service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,8 +16,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.playschool.management.dto.DriverDTO;
+import com.playschool.management.entity.AssignmentHistory;
 import com.playschool.management.entity.Driver;
 import com.playschool.management.entity.Vehicle;
+import com.playschool.management.repository.AssignmentHistoryRepository;
 import com.playschool.management.repository.DriverRepository;
 import com.playschool.management.repository.VehicleRepository;
 
@@ -30,11 +33,13 @@ public class DriverService {
     
     private final DriverRepository driverRepository;
     private final VehicleRepository vehicleRepository;
+    private final AssignmentHistoryRepository assignmentHistoryRepository;
     
     @Autowired
-    public DriverService(DriverRepository driverRepository, VehicleRepository vehicleRepository) { 
+    public DriverService(DriverRepository driverRepository, VehicleRepository vehicleRepository, AssignmentHistoryRepository assignmentHistoryRepository) { 
         this.driverRepository = driverRepository;
         this.vehicleRepository = vehicleRepository; 
+        this.assignmentHistoryRepository = assignmentHistoryRepository;
     }
     public enum DriverStatus { AVAILABLE, ON_TRIP, OFF_DUTY, BREAK }
 
@@ -194,7 +199,23 @@ public class DriverService {
 
     @Transactional(readOnly = true)
     public List<Driver> findByCurrentVehicle(String vehicleId) {
-        return driverRepository.findByCurrentVehicle(vehicleId);
+        // 1. Find the Vehicle entity by its ID
+        Optional<Vehicle> vehicleOpt = vehicleRepository.findById(vehicleId);
+
+        if (vehicleOpt.isEmpty()) {
+            // If the vehicle doesn't exist, no driver can be assigned to it.
+            return Collections.emptyList();
+        }
+
+        // 2. Find the active assignment for that specific vehicle
+        Optional<AssignmentHistory> activeAssignment =
+            assignmentHistoryRepository.findByVehicleAndIsActiveTrue(vehicleOpt.get());
+
+        // 3. If an active assignment is found, return its driver in a list.
+        //    Otherwise, return an empty list. This matches the original method's return type.
+        return activeAssignment
+            .map(assignment -> Collections.singletonList(assignment.getDriver()))
+            .orElse(Collections.emptyList());
     }
 
     // Document expiry alerts
@@ -311,69 +332,77 @@ public class DriverService {
     }
     @Transactional
     public Driver assignVehicle(String driverId, String vehicleId) {
-        // 1. Fetch the driver and vehicle from the database.
-        // If either is not found, an exception is thrown.
+        // 1. Fetch the core entities
         Driver driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new EntityNotFoundException("Driver not found with ID: " + driverId));
-
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new EntityNotFoundException("Vehicle not found with ID: " + vehicleId));
 
-        // 2. Validate that the vehicle is not already assigned to someone else.
-        if (vehicle.getDriverId() != null && !vehicle.getDriverId().isEmpty()) {
-            if (vehicle.getDriverId().equals(driverId)) {
-                // The vehicle is already assigned to this driver, so no change is needed.
-                return driver;
-            } else {
-                // The vehicle is assigned to a different driver, which is an error.
-                throw new IllegalStateException("Vehicle " + vehicleId + " is already assigned to another driver.");
-            }
+        // 2. Check if the vehicle or driver already has an ACTIVE assignment
+        if (assignmentHistoryRepository.findByVehicleAndIsActiveTrue(vehicle).isPresent()) {
+            throw new IllegalStateException("Vehicle " + vehicleId + " is already actively assigned.");
+        }
+        if (assignmentHistoryRepository.findByDriverAndIsActiveTrue(driver).isPresent()) {
+            throw new IllegalStateException("Driver " + driverId + " is already on an active trip.");
         }
 
-        // 3. Update both the driver and the vehicle entities.
-        
-        // Add the vehicle to the driver's list of assigned vehicles.
-        if (!driver.getAssignedVehicles().contains(vehicleId)) {
-            driver.getAssignedVehicles().add(vehicleId);
-        }
-        
-        // Set the driver's current vehicle and update their status.
-        driver.setCurrentVehicle(vehicleId);
-        driver.setStatus(Driver.DriverStatus.ON_TRIP);
+        // 3. Create the new historical assignment record
+        AssignmentHistory newAssignment = new AssignmentHistory();
+        newAssignment.setVehicle(vehicle);
+        newAssignment.setDriver(driver);
+        newAssignment.setAssignmentStartDate(LocalDate.now());
+        newAssignment.setAssignmentEndDate(null); // End date is null because it's active
+        newAssignment.setActive(true);
+        assignmentHistoryRepository.save(newAssignment);
 
-        // Set the driver's ID on the vehicle and update its status.
-        vehicle.setDriverId(driverId);
+        // 4. Update the status of the vehicle and driver
         vehicle.setStatus(Vehicle.VehicleStatus.IN_TRANSIT);
-
-        // 4. Save the changes to the database.
-        // @Transactional ensures both saves happen successfully or neither does.
         vehicleRepository.save(vehicle);
+
+        driver.setStatus(Driver.DriverStatus.ON_TRIP);
         return driverRepository.save(driver);
     }
+    @Transactional
     public Driver unassignVehicle(String driverId) {
+        // 1. Find the driver
         Driver driver = driverRepository.findById(driverId)
             .orElseThrow(() -> new EntityNotFoundException("Driver not found with id " + driverId));
 
-        // If the driver currently has a vehicle assigned, update the vehicle record
-        if (driver.getCurrentVehicle() != null) {
-            String vehicleId = driver.getCurrentVehicle();
-            Vehicle vehicle = vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new EntityNotFoundException("Vehicle not found with id " + vehicleId));
-            
-            // Remove driver reference from vehicle
-            vehicle.setDriverId(null);
-            vehicleRepository.save(vehicle);
+        // 2. Find the driver's CURRENT ACTIVE assignment from the history table
+        AssignmentHistory activeAssignment = assignmentHistoryRepository.findByDriverAndIsActiveTrue(driver)
+            .orElseThrow(() -> new IllegalStateException("Driver " + driverId + " does not have an active vehicle assignment to unassign."));
+        
+        // 3. Get the vehicle from the assignment record
+        Vehicle vehicle = activeAssignment.getVehicle();
+        
+        // 4. End the assignment period
+        activeAssignment.setAssignmentEndDate(LocalDate.now());
+        activeAssignment.setActive(false);
+        assignmentHistoryRepository.save(activeAssignment);
+
+        // 5. Update the status of the vehicle and driver to AVAILABLE
+        vehicle.setStatus(Vehicle.VehicleStatus.AVAILABLE);
+        vehicleRepository.save(vehicle);
+
+        driver.setStatus(Driver.DriverStatus.AVAILABLE);
+        return driverRepository.save(driver);
+    }
+    
+    @Transactional
+    public Driver deactivateDriver(String driverId) {
+        // 1. Find the driver
+        Driver driver = driverRepository.findById(driverId)
+            .orElseThrow(() -> new EntityNotFoundException("Driver not found with id " + driverId));
+
+        // 2. CRUCIAL: Check if the driver is on an active trip
+        if (assignmentHistoryRepository.findByDriverAndIsActiveTrue(driver).isPresent()) {
+            throw new IllegalStateException("Cannot deactivate a driver who is on an active trip. Please unassign the vehicle first.");
         }
 
-        // Remove current vehicle from driver
-        driver.setCurrentVehicle(null);
+        // 3. Update the driver's status
+        driver.setStatus(Driver.DriverStatus.INACTIVE);
 
-        // Set driver status to AVAILABLE
-        driver.setStatus(Driver.DriverStatus.AVAILABLE);
-
-        // Clear the assigned vehicles list
-        driver.getAssignedVehicles().clear();
-
+        // 4. Save and return the updated driver
         return driverRepository.save(driver);
     }
 

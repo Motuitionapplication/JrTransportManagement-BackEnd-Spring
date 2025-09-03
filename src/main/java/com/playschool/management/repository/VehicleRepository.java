@@ -17,8 +17,8 @@ public interface VehicleRepository extends JpaRepository<Vehicle, String> {
     // Find vehicles by owner (Correct: Spring traverses owner -> id)
     List<Vehicle> findByOwnerId(String ownerId);
 
-    // Find vehicles by driver
-    List<Vehicle> findByDriverId(String driverId);
+//    // Find vehicles by driver
+//    List<Vehicle> findByDriverId(String driverId);
 
     // Find vehicle by vehicle number
     Optional<Vehicle> findByVehicleNumber(String vehicleNumber);

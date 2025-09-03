@@ -66,7 +66,7 @@ public interface DriverRepository extends JpaRepository<Driver, String> {
     List<Driver> findByAssignedVehicle(@Param("vehicleId") String vehicleId);
     
     // Find drivers by current vehicle
-    List<Driver> findByCurrentVehicle(String vehicleId);
+//    List<Driver> findByCurrentVehicle(String vehicleId);
     
     // Find drivers by city
     @Query("SELECT d FROM Driver d WHERE d.address.city = :city")
