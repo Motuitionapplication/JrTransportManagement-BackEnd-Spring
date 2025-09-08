@@ -14,10 +14,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.playschool.management.dto.VehicleOwnerDTO;
+import com.playschool.management.entity.AssignmentHistory;
 import com.playschool.management.entity.Driver;
 import com.playschool.management.entity.Payment;
+import com.playschool.management.entity.Vehicle;
 import com.playschool.management.entity.VehicleOwner;
 import com.playschool.management.entity.WalletTransaction;
+import com.playschool.management.repository.AssignmentHistoryRepository;
 import com.playschool.management.repository.DriverRepository;
 import com.playschool.management.repository.PaymentRepository;
 import com.playschool.management.repository.VehicleOwnerRepository;
@@ -33,18 +36,22 @@ public class VehicleOwnerService {
     private final DriverRepository driverRepository;
     private final VehicleRepository vehicleRepository;
     private final PaymentRepository paymentRepository;
+    private final AssignmentHistoryRepository assignmentHistoryRepository;
+
 
     
     // Explicit constructor
 	public VehicleOwnerService(VehicleOwnerRepository vehicleOwnerRepository, PasswordEncoder passwordEncoder,
 			DriverRepository driverRepository, VehicleRepository vehicleRepository,
-			PaymentRepository paymentRepository) {
+			PaymentRepository paymentRepository,AssignmentHistoryRepository assignmentHistoryRepository ) {
 		super();
 		this.vehicleOwnerRepository = vehicleOwnerRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.driverRepository = driverRepository;
 		this.vehicleRepository = vehicleRepository;
 		this.paymentRepository = paymentRepository;
+        this.assignmentHistoryRepository = assignmentHistoryRepository;
+
 	}
     
     
@@ -435,35 +442,31 @@ public class VehicleOwnerService {
     // Find drivers by vehicle owner
     @Transactional(readOnly = true)
     public List<Driver> getDriversByOwner(String ownerId) {
-        log.info("Fetching drivers for owner ID: {}", ownerId);
-        
-        List<Driver> drivers = driverRepository.findByVehicleOwnerId(ownerId);
+        // 1. Fetch the list of drivers associated with the owner (your existing logic)
+        List<Driver> drivers = driverRepository.findByVehicleOwnerId(ownerId); // Example query
 
-        drivers.forEach(driver -> {
-            String vehicleInfo = "N/A"; // Default value
+        // 2. Loop through each driver to populate the transient field
+        for (Driver driver : drivers) {
+            // Find the current ACTIVE assignment for this specific driver
+            Optional<AssignmentHistory> activeAssignmentOpt = 
+                assignmentHistoryRepository.findByDriverAndIsActiveTrue(driver);
 
-            // --- THIS IS THE CORRECTED LOGIC ---
-            // Use the 'currentVehicle' field
-            String currentVehicleId = driver.getCurrentVehicle();
-
-            if (currentVehicleId != null && !currentVehicleId.isEmpty()) {
-                // Find the vehicle by its ID
-                vehicleRepository.findById(currentVehicleId).ifPresent(vehicle -> {
-                    // If vehicle is found, create the display string and set it
-                    String info = String.format("%s (%s %s)", 
-                        vehicle.getVehicleNumber(), 
-                        vehicle.getManufacturer(), 
-                        vehicle.getModel());
-                    driver.setAssignedVehicleInfo(info);
-                });
+            if (activeAssignmentOpt.isPresent()) {
+                // If an active assignment exists, get the vehicle from it
+                Vehicle assignedVehicle = activeAssignmentOpt.get().getVehicle();
+                // Format the string you want to send to the frontend
+                String info = String.format("%s - %s", 
+                    assignedVehicle.getVehicleNumber(), 
+                    assignedVehicle.getModel());
+                driver.setAssignedVehicleInfo(info);
+            } else {
+                // If there's no active assignment, set a default value
+                driver.setAssignedVehicleInfo("N/A");
             }
-            
-            // If vehicle isn't found or driver has no current vehicle, set the default
-            if (driver.getAssignedVehicleInfo() == null) {
-                driver.setAssignedVehicleInfo(vehicleInfo);
-            }
-        });
+        }
 
+        // 3. Return the modified list of drivers
+        // Each driver object now has the 'assignedVehicleInfo' field populated
         return drivers;
     }
     

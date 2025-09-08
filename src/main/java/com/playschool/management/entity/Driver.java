@@ -64,7 +64,20 @@ public class Driver {
     
     private String alternatePhone;
     
-    @Embedded
+    @Transient
+    private String assignedVehicleInfo;
+    
+    
+    
+    public String getAssignedVehicleInfo() {
+		return assignedVehicleInfo;
+	}
+
+	public void setAssignedVehicleInfo(String assignedVehicleInfo) {
+		this.assignedVehicleInfo = assignedVehicleInfo;
+	}
+
+	@Embedded
     @AttributeOverrides({
         @AttributeOverride(name = "street", column = @Column(name = "address_street")),
         @AttributeOverride(name = "city", column = @Column(name = "address_city")),
@@ -83,8 +96,8 @@ public class Driver {
     @NotNull(message = "Date of birth is required")
     private LocalDate dateOfBirth;
     
-    @Transient
-    private String assignedVehicleInfo;
+//    @Transient
+//    private String assignedVehicleInfo;
     
     @Embedded
     @AttributeOverrides({
@@ -94,14 +107,7 @@ public class Driver {
     })
     private EmergencyContact emergencyContact;
     
-    public String getAssignedVehicleInfo() {
-		return assignedVehicleInfo;
-	}
-
-	public void setAssignedVehicleInfo(String assignedVehicleInfo) {
-		this.assignedVehicleInfo = assignedVehicleInfo;
-	}
-
+ 
 	@Column(unique = true, nullable = false)
     private String userId;
     
@@ -148,7 +154,7 @@ public class Driver {
     @Column(name = "vehicle_id")
     private List<String> assignedVehicles = new ArrayList<>();
     
-    private String currentVehicle;
+//    private String currentVehicle;
     
     @Enumerated(EnumType.STRING)
     private DriverStatus status = DriverStatus.AVAILABLE;
@@ -264,8 +270,7 @@ public class Driver {
     public void setInsurance(DriverInsurance insurance) { this.insurance = insurance; }
     public List<String> getAssignedVehicles() { return assignedVehicles; }
     public void setAssignedVehicles(List<String> assignedVehicles) { this.assignedVehicles = assignedVehicles; }
-    public String getCurrentVehicle() { return currentVehicle; }
-    public void setCurrentVehicle(String currentVehicle) { this.currentVehicle = currentVehicle; }
+
     public DriverStatus getStatus() { return status; }
     public void setStatus(DriverStatus status) { this.status = status; }
     public WorkingHours getWorkingHours() { return workingHours; }
@@ -332,7 +337,7 @@ public class Driver {
     }
 
     // Enums ...
-    public enum DriverStatus { AVAILABLE, ON_TRIP, OFF_DUTY, BREAK }
+    public enum DriverStatus { AVAILABLE, ON_TRIP, OFF_DUTY, BREAK ,INACTIVE}
     public enum VerificationStatus { PENDING, VERIFIED, REJECTED }
     public enum AccountStatus { ACTIVE, SUSPENDED, BLOCKED }
     public enum BackgroundCheckStatus { PENDING, CLEARED, FAILED }

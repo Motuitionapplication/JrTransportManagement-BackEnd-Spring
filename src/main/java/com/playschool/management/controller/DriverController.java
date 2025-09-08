@@ -5,9 +5,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +36,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 
 @RestController
@@ -450,6 +451,19 @@ public class DriverController {
         } catch (Exception e) {
             log.error("Error unassigning vehicle from driver: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
+        }
+    }
+    @PatchMapping("/{driverId}/deactivate")
+    @Operation(summary = "Deactivate a driver", description = "Sets the driver's status to INACTIVE.")
+    public ResponseEntity<Driver> deactivateDriver(@PathVariable String driverId) {
+        try {
+            Driver deactivatedDriver = driverService.deactivateDriver(driverId);
+            return ResponseEntity.ok(deactivatedDriver);
+        } catch (IllegalStateException e) {
+            // This handles the case where the driver is on an active trip
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
         }
     }
 

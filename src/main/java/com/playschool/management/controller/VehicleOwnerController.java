@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,9 +23,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.playschool.management.dto.DriverDTO;
 import com.playschool.management.dto.VehicleOwnerDTO;
+import com.playschool.management.dto.response.AssignmentHistoryDto;
 import com.playschool.management.entity.Driver; // Add this import
 import com.playschool.management.entity.VehicleOwner;
 import com.playschool.management.entity.WalletTransaction;
+import com.playschool.management.service.HistoryService;
 import com.playschool.management.service.VehicleOwnerService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -486,6 +489,15 @@ public class VehicleOwnerController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+    
+    @Autowired
+    private HistoryService historyService;
+    
+    @GetMapping("/{ownerId}/assignment-history")
+    public ResponseEntity<List<AssignmentHistoryDto>> getHistory(@PathVariable String ownerId) {
+        List<AssignmentHistoryDto> history = historyService.getAssignmentHistoryForOwner(ownerId);
+        return ResponseEntity.ok(history);
     }
     
 }
