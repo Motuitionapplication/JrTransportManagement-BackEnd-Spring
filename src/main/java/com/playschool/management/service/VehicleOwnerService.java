@@ -479,4 +479,8 @@ public class VehicleOwnerService {
         
         driverRepository.delete(driver);
     }
+    public String getid(String userid) {
+        VehicleOwner owner = vehicleOwnerRepository.findByOwnerId(userid);
+        return owner.getId().toString(); 
+    }
 }

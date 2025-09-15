@@ -500,4 +500,12 @@ public class VehicleOwnerController {
         return ResponseEntity.ok(history);
     }
     
-}
+    @GetMapping("/ownerid")
+    public ResponseEntity<String> getOwnerId(@RequestParam("userid") String userid) {
+        String ownerid = vehicleOwnerService.getid(userid);
+        return ResponseEntity.ok(ownerid);
+    }
+   }
+    
+    
+

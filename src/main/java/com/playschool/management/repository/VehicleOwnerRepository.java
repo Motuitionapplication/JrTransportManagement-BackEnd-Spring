@@ -88,4 +88,6 @@ public interface VehicleOwnerRepository extends JpaRepository<VehicleOwner, Stri
     
     @Query("SELECT vo FROM VehicleOwner vo JOIN FETCH vo.drivers WHERE vo.id = :ownerId")
     Optional<VehicleOwner> findByIdWithDrivers(String ownerId);
+    
+    VehicleOwner findByOwnerId(String OwnerId);
 }
