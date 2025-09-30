@@ -6,10 +6,18 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.playschool.management.dto.CustomerCreateDto;
 import com.playschool.management.dto.CustomerResponseDto;
+import com.playschool.management.dto.request.PasswordUpdateDto;
 import com.playschool.management.dto.response.CustomerUpdateDto;
 import com.playschool.management.entity.Customer;
 import com.playschool.management.service.CustomerService;
@@ -58,7 +66,7 @@ public class CustomerController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PutMapping("/{customerId}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Customer> updateCustomer(
             @PathVariable String customerId,
             @Valid
@@ -80,5 +88,17 @@ public class CustomerController {
     @PutMapping
     public ResponseEntity<CustomerResponseDto> addCustomer(@Valid @RequestBody CustomerCreateDto dto) {
         return ResponseEntity.ok(customerService.addCustomer(dto));
+    }
+    @GetMapping("/custid")
+    public ResponseEntity<String> getCutomerId(@RequestParam("userid") String userid) {
+        String custid = customerService.getid(userid);
+        return ResponseEntity.ok(custid);
+    }
+    @PutMapping("/{customerId}/password")
+    public ResponseEntity<String> updateCustomerPassword(
+            @PathVariable String customerId,
+            @Valid @RequestBody PasswordUpdateDto passwordDto) {
+        customerService.updateCustomerPassword(customerId, passwordDto);
+        return ResponseEntity.ok("Password updated successfully");
     }
 }
