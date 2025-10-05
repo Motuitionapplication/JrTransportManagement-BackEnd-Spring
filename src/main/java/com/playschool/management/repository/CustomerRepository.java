@@ -1,6 +1,8 @@
 package com.playschool.management.repository;
 
 import com.playschool.management.entity.Customer;
+import com.playschool.management.entity.VehicleOwner;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -111,5 +113,5 @@ public interface CustomerRepository extends JpaRepository<Customer, String> {
     // Check if bank account number exists
     @Query("SELECT COUNT(c) > 0 FROM Customer c WHERE c.bankDetails.accountNumber = :accountNumber")
     boolean existsByBankAccountNumber(@Param("accountNumber") String accountNumber);
-
+    
 }

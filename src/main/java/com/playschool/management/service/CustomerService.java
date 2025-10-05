@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import com.playschool.management.dto.CustomerCreateDto;
 import com.playschool.management.dto.CustomerResponseDto;
+import com.playschool.management.dto.request.PasswordUpdateDto;
 import com.playschool.management.dto.response.CustomerUpdateDto;
 import com.playschool.management.entity.Customer;
 
@@ -18,4 +19,6 @@ public interface CustomerService {
 
     // 🔄 Add this to support saveCustomer endpoint
     CustomerResponseDto addCustomer(CustomerCreateDto dto);
-}
+    public String getid(String userid);
+    void updateCustomerPassword(String customerId, PasswordUpdateDto dto);
+    }

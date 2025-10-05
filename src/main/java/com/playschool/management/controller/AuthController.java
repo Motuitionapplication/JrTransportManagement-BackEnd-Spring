@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.playschool.management.dto.CustomerCreateDto;
 import com.playschool.management.dto.request.LoginRequest;
 import com.playschool.management.dto.request.SignupRequest;
 import com.playschool.management.dto.response.JwtResponse;
@@ -34,6 +35,7 @@ import com.playschool.management.repository.VehicleOwnerRepository;
 import com.playschool.management.repository.VehicleRepository;
 import com.playschool.management.security.jwt.JwtUtils;
 import com.playschool.management.security.services.UserPrincipal;
+import com.playschool.management.service.CustomerService;
 
 import jakarta.validation.Valid;
 
@@ -64,6 +66,9 @@ public class AuthController {
     
     @Autowired
     PasswordEncoder encoder;
+    
+    @Autowired
+    CustomerService customerservice;
     
     @Autowired
     JwtUtils jwtUtils;
@@ -183,11 +188,15 @@ public class AuthController {
         // If user is customer, create entry in customer table
         boolean isCustomer = roles.stream().anyMatch(r -> r.getName() == RoleName.ROLE_CUSTOMER);
         if (isCustomer) {
-            com.playschool.management.entity.Customer customer = new com.playschool.management.entity.Customer();
-            customer.setUserId(String.valueOf(savedUser.getId()));
-            customer.setEmail(savedUser.getEmail());
-            customer.setPhoneNumber(savedUser.getPhoneNumber());
-            customerRepository.save(customer);
+            CustomerCreateDto customerDto = new CustomerCreateDto();
+            customerDto.setUserId(String.valueOf(savedUser.getId()));  // store FK link to users table
+            customerDto.setFirstName(savedUser.getFirstName());
+            customerDto.setLastName(savedUser.getLastName());
+            customerDto.setEmail(savedUser.getEmail());
+            customerDto.setPhoneNumber(savedUser.getPhoneNumber());
+            customerDto.setPassword(signUpRequest.getPassword()); // ⚠️ raw password, will be encoded inside service
+
+            customerservice.addCustomer(customerDto);
         }
         
         // If user is owner, create entry in vehicle table and vehicle_owner map table
