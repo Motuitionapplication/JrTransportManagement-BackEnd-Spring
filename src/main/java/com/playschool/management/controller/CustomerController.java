@@ -1,6 +1,8 @@
 package com.playschool.management.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,9 +20,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.playschool.management.dto.CustomerCreateDto;
 import com.playschool.management.dto.CustomerResponseDto;
+import com.playschool.management.dto.request.BookingRequest;
 import com.playschool.management.dto.request.PasswordUpdateDto;
 import com.playschool.management.dto.response.CustomerUpdateDto;
 import com.playschool.management.entity.Customer;
+import com.playschool.management.service.BookingService;
 import com.playschool.management.service.CustomerService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,6 +42,9 @@ public class CustomerController {
 
     @Autowired
     private CustomerService customerService;
+    
+    @Autowired
+    private BookingService bookingService;
 
     @Operation(summary = "Get all customers", description = "Retrieves all customers in the system")
     @GetMapping
@@ -101,4 +109,17 @@ public class CustomerController {
         customerService.updateCustomerPassword(customerId, passwordDto);
         return ResponseEntity.ok("Password updated successfully");
     }
+    
+    @PostMapping("/{customerId}/booking")
+    public ResponseEntity<Map<String, String>> newBooking(
+            @PathVariable String customerId,
+            @RequestBody BookingRequest bookingRequest) {
+
+        bookingService.newBooking(customerId, bookingRequest);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Booking Request Sent");
+        return ResponseEntity.ok(response);
+    }
+    
 }
