@@ -141,7 +141,16 @@ public class Customer {
     private Boolean pushNotifications = true;
     private Boolean whatsappNotifications = true;
     
-    @ElementCollection
+    
+    
+    public List<String> getBookingHistory() {
+		return bookingHistory;
+	}
+	public void setBookingHistory(List<String> bookingHistory) {
+		this.bookingHistory = bookingHistory;
+	}
+
+	@ElementCollection
     @CollectionTable(name = "customer_frequent_destinations", 
                     joinColumns = @JoinColumn(name = "customer_id"))
     private List<CustomerAddress> frequentDestinations = new ArrayList<>();
@@ -262,4 +271,5 @@ public class Customer {
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
+    
 }

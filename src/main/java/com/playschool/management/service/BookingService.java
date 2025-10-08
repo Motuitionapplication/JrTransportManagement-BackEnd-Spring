@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.playschool.management.dto.request.BookingRequest;
 import com.playschool.management.entity.Booking;
+import com.playschool.management.entity.Customer;
 import com.playschool.management.repository.BookingRepository;
 import com.playschool.management.repository.CustomerRepository;
 
@@ -50,7 +51,14 @@ public class BookingService {
         booking.setCustomerTermsAccepted(true);
         booking.setCustomerTermsAcceptedAt(LocalDateTime.now());
 
-        return bookingrepo.save(booking);
+        Booking savedBooking = bookingrepo.save(booking);
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        customer.getBookingHistory().add(booking.getId());
+        customerRepository.save(customer);
+        
+        return savedBooking;
     }
 
     private Booking.BookingAddress mapAddressDtoToEntity(BookingRequest.AddressDTO addressDto) {

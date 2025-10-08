@@ -23,7 +23,10 @@ import com.playschool.management.dto.CustomerResponseDto;
 import com.playschool.management.dto.request.BookingRequest;
 import com.playschool.management.dto.request.PasswordUpdateDto;
 import com.playschool.management.dto.response.CustomerUpdateDto;
+import com.playschool.management.entity.Booking;
 import com.playschool.management.entity.Customer;
+import com.playschool.management.repository.BookingRepository;
+import com.playschool.management.repository.CustomerRepository;
 import com.playschool.management.service.BookingService;
 import com.playschool.management.service.CustomerService;
 
@@ -42,6 +45,12 @@ public class CustomerController {
 
     @Autowired
     private CustomerService customerService;
+    
+    @Autowired
+    private CustomerRepository customerRepository;
+    
+    @Autowired
+	private BookingRepository bookingrepo;
     
     @Autowired
     private BookingService bookingService;
@@ -120,6 +129,17 @@ public class CustomerController {
         Map<String, String> response = new HashMap<>();
         response.put("message", "Booking Request Sent");
         return ResponseEntity.ok(response);
+    }
+    @GetMapping("/{customerId}/booking-history")
+    public ResponseEntity<List<Booking>> getBookingHistory(@PathVariable String customerId) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        List<String> bookingIds = customer.getBookingHistory();
+
+        List<Booking> bookings = bookingrepo.findAllById(bookingIds);
+
+        return ResponseEntity.ok(bookings);
     }
     
 }
