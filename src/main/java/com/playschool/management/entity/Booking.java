@@ -380,20 +380,38 @@ public class Booking {
         
     }
     
-    @Embeddable
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ContactPerson {
-        private String name;
-        private String phoneNumber;
-    }
+	@Embeddable
+	public static class ContactPerson {
+		private String name;
+		private String phoneNumber;
+
+		public ContactPerson() {
+		}
+
+		public ContactPerson(String name, String phoneNumber) {
+			this.name = name;
+			this.phoneNumber = phoneNumber;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String getPhoneNumber() {
+			return phoneNumber;
+		}
+
+		public void setPhoneNumber(String phoneNumber) {
+			this.phoneNumber = phoneNumber;
+		}
+	}
     
-    @Embeddable
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class PricingDetails {
+	@Embeddable
+	public static class PricingDetails {
         @Column(precision = 10, scale = 2)
         private BigDecimal baseFare;
         
@@ -420,6 +438,95 @@ public class Booking {
         
         @Column(precision = 10, scale = 2)
         private BigDecimal finalAmount;
+        
+		public PricingDetails() {
+		}
+
+		public PricingDetails(BigDecimal baseFare, BigDecimal perKmRate, BigDecimal gstAmount,
+				BigDecimal serviceCharge, BigDecimal insuranceCharge, BigDecimal tollCharges,
+				BigDecimal totalAmount, BigDecimal discountAmount, BigDecimal finalAmount) {
+			this.baseFare = baseFare;
+			this.perKmRate = perKmRate;
+			this.gstAmount = gstAmount;
+			this.serviceCharge = serviceCharge;
+			this.insuranceCharge = insuranceCharge;
+			this.tollCharges = tollCharges;
+			this.totalAmount = totalAmount;
+			this.discountAmount = discountAmount;
+			this.finalAmount = finalAmount;
+		}
+
+		public BigDecimal getBaseFare() {
+			return baseFare;
+		}
+
+		public void setBaseFare(BigDecimal baseFare) {
+			this.baseFare = baseFare;
+		}
+
+		public BigDecimal getPerKmRate() {
+			return perKmRate;
+		}
+
+		public void setPerKmRate(BigDecimal perKmRate) {
+			this.perKmRate = perKmRate;
+		}
+
+		public BigDecimal getGstAmount() {
+			return gstAmount;
+		}
+
+		public void setGstAmount(BigDecimal gstAmount) {
+			this.gstAmount = gstAmount;
+		}
+
+		public BigDecimal getServiceCharge() {
+			return serviceCharge;
+		}
+
+		public void setServiceCharge(BigDecimal serviceCharge) {
+			this.serviceCharge = serviceCharge;
+		}
+
+		public BigDecimal getInsuranceCharge() {
+			return insuranceCharge;
+		}
+
+		public void setInsuranceCharge(BigDecimal insuranceCharge) {
+			this.insuranceCharge = insuranceCharge;
+		}
+
+		public BigDecimal getTollCharges() {
+			return tollCharges;
+		}
+
+		public void setTollCharges(BigDecimal tollCharges) {
+			this.tollCharges = tollCharges;
+		}
+
+		public BigDecimal getTotalAmount() {
+			return totalAmount;
+		}
+
+		public void setTotalAmount(BigDecimal totalAmount) {
+			this.totalAmount = totalAmount;
+		}
+
+		public BigDecimal getDiscountAmount() {
+			return discountAmount;
+		}
+
+		public void setDiscountAmount(BigDecimal discountAmount) {
+			this.discountAmount = discountAmount;
+		}
+
+		public BigDecimal getFinalAmount() {
+			return finalAmount;
+		}
+
+		public void setFinalAmount(BigDecimal finalAmount) {
+			this.finalAmount = finalAmount;
+		}
     }
     
     @Embeddable
