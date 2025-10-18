@@ -1,4 +1,3 @@
-
 # PlaySchool Management Backend
 
 A comprehensive Spring Boot backend application for managing play school operations including student management, user authentication, and role-based access control.
@@ -46,10 +45,12 @@ src/
 ## API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/signin` - User login
 - `POST /api/auth/signup` - User registration
 
 ### Students (Protected)
+
 - `GET /api/students` - Get all active students
 - `GET /api/students/{id}` - Get student by ID
 - `POST /api/students` - Create new student
@@ -58,6 +59,7 @@ src/
 - `GET /api/students/search?name={name}` - Search students by name
 
 ### Test Endpoints
+
 - `GET /api/test/all` - Public access
 - `GET /api/test/admin` - Admin only
 - `GET /api/test/teacher` - Teacher access
@@ -67,6 +69,7 @@ src/
 ## Setup Instructions
 
 ### Prerequisites
+
 - Java 17 or higher
 - Maven 3.6+
 - MySQL 8.0+ OR PostgreSQL 12+ (for production)
@@ -74,21 +77,24 @@ src/
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd PlaySchoolManagementBackend
    ```
 
 2. **Configure Database**
-   
+
    **For MySQL** (update `src/main/resources/application.properties`):
+
    ```properties
    spring.datasource.url=jdbc:mysql://localhost:3306/playschool_db
    spring.datasource.username=your_username
    spring.datasource.password=your_password
    ```
-   
+
    **For PostgreSQL** (use `application-postgresql.properties` or set profile):
+
    ```properties
    spring.profiles.active=postgresql
    # OR
@@ -98,19 +104,22 @@ src/
    ```
 
 3. **Create Database**
-   
+
    **For MySQL:**
+
    ```sql
    CREATE DATABASE playschool_db;
    ```
-   
+
    **For PostgreSQL:**
+
    ```sql
    CREATE DATABASE playschool_db;
    # Connect: psql -U postgres
    ```
 
 4. **Build and Run**
+
    ```bash
    mvn clean install
    mvn spring-boot:run
@@ -123,16 +132,19 @@ src/
 ## Default Configuration
 
 ### Database Settings
+
 - **Production**: MySQL on port 3306
 - **Testing**: H2 in-memory database
 - **JPA**: Auto DDL update enabled
 
 ### Security Settings
+
 - **JWT Secret**: Configurable via `jwt.secret`
 - **JWT Expiration**: 24 hours (86400000ms)
 - **Password Encoding**: BCrypt
 
 ### CORS Settings
+
 - **Allowed Origins**: `http://localhost:3000`, `http://localhost:3001`
 - **Allowed Methods**: GET, POST, PUT, DELETE, PATCH, OPTIONS
 
@@ -146,11 +158,17 @@ src/
 ## Testing
 
 Run tests with:
+
 ```bash
 mvn test
 ```
 
 Tests use H2 in-memory database with test-specific configuration.
+
+### Driver Profile Auto-Creation (Local Dev)
+
+- Frontend drivers now call `POST /api/transport/drivers/minimal` whenever `GET /api/transport/drivers/profile/userId/{userId}` returns **404**.
+- // COPILOT-FIX: To seed data manually, you can invoke the minimal endpoint with an authenticated driver token or insert a row with your `user_id` into the `drivers` table so that subsequent logins skip auto-provisioning.
 
 ## Development
 
@@ -186,7 +204,6 @@ The application uses JWT tokens for authentication. To access protected endpoint
 
 ## License
 
-This project is licensed under the MIT License.
-=======
-# PlaySchoolManagementBackend
+# This project is licensed under the MIT License.
 
+# PlaySchoolManagementBackend

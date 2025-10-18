@@ -1,0 +1,105 @@
+{
+  "runInfo": {
+    "runAt": "2025-10-15T11:32:18.080Z",
+    "cwd": "D:\\GKCT\\JrTransportManagement-BackEnd-Spring",
+    "options": {
+      "frontend": "JrTransportManagement-Frontend-Angular",
+      "backend": "JrTransportManagement-BackEnd-Spring"
+    }
+  },
+  "frontend": {
+    "dir": "D:\\GKCT\\JrTransportManagement-BackEnd-Spring\\JrTransportManagement-Frontend-Angular",
+    "exists": false,
+    "totalFiles": 0,
+    "componentCount": 0,
+    "injectableCount": 0,
+    "expectedNames": {
+      "toCheck": [
+        "DriverLoginComponent",
+        "DriverDashboardComponent",
+        "DriverProfileComponent",
+        "VehicleComponent",
+        "ConsignmentComponent",
+        "HistoryComponent",
+        "DocumentUploadComponent",
+        "ReviewComponent"
+      ],
+      "found": [],
+      "missing": [
+        "DriverLoginComponent",
+        "DriverDashboardComponent",
+        "DriverProfileComponent",
+        "VehicleComponent",
+        "ConsignmentComponent",
+        "HistoryComponent",
+        "DocumentUploadComponent",
+        "ReviewComponent"
+      ]
+    },
+    "jwtPatterns": {
+      "localStorageSetToken": false,
+      "sessionStorageSetToken": false,
+      "authorizationHeader": false
+    },
+    "mockOrHardcoded": {
+      "hasMockKeyword": false,
+      "hasConstArray": false
+    },
+    "sampleComponentFiles": [],
+    "apiSamples": []
+  },
+  "backend": {
+    "dir": "D:\\GKCT\\JrTransportManagement-BackEnd-Spring\\JrTransportManagement-BackEnd-Spring",
+    "exists": false,
+    "totalFiles": 0,
+    "controllerFiles": [],
+    "mappingAnnotations": {
+      "get": 0,
+      "post": 0,
+      "put": 0,
+      "del": 0,
+      "request": 0
+    },
+    "expectedNames": {
+      "toCheck": [
+        "DriverAuthController",
+        "DriverController",
+        "DriverAuthService",
+        "DriverService",
+        "JWTFilter",
+        "SecurityConfig"
+      ],
+      "found": [],
+      "missing": [
+        "DriverAuthController",
+        "DriverController",
+        "DriverAuthService",
+        "DriverService",
+        "JWTFilter",
+        "SecurityConfig"
+      ]
+    },
+    "configs": {
+      "hasApplicationProperties": false,
+      "hasApplicationYml": false,
+      "flags": {
+        "jwtSecret": false,
+        "datasourceUser": false,
+        "datasourcePass": false,
+        "postgresJdbc": false
+      }
+    },
+    "realtimeOrMigrations": {
+      "websocket": false,
+      "stomp": false,
+      "fcm": false,
+      "flyway": false,
+      "liquibase": false
+    },
+    "sampleControllerFiles": []
+  },
+  "crossCheck": {
+    "frontendApiSamples": [],
+    "missingInBackend": []
+  }
+}

@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -23,9 +24,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.playschool.management.dto.DriverDTO;
 import com.playschool.management.dto.request.AssignVehicleRequestDTO;
+import com.playschool.management.dto.request.MinimalDriverRequestDTO;
 import com.playschool.management.entity.Driver;
 import com.playschool.management.service.DriverService;
 
@@ -63,6 +66,24 @@ public class DriverController {
             @Valid @RequestBody Driver driver) {
         Driver savedDriver = driverService.createDriver(driver);
         return new ResponseEntity<>(savedDriver, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/minimal")
+    @PreAuthorize("hasRole('DRIVER') or hasRole('ADMIN')")
+    @Operation(summary = "Ensure minimal driver profile", description = "Create a minimal driver record when missing")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Driver created successfully"),
+        @ApiResponse(responseCode = "200", description = "Existing driver returned"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data")
+    })
+    public ResponseEntity<Driver> createMinimalDriver(@Valid @RequestBody MinimalDriverRequestDTO request) {
+        // COPILOT-FIX: support frontend auto-creation when user logs in without an existing driver row
+        Optional<Driver> existing = driverService.findByUserId(request.getUserId());
+        if (existing.isPresent()) {
+            return ResponseEntity.ok(existing.get());
+        }
+        Driver created = driverService.createMinimalDriver(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @GetMapping
@@ -378,6 +399,16 @@ public class DriverController {
             @PathVariable @Parameter(description = "Identity proof number") String identityNumber) {
         boolean exists = driverService.existsByIdentityProofNumber(identityNumber);
         return ResponseEntity.ok(exists);
+    }
+
+    @PreAuthorize("hasRole('DRIVER')")
+    @PostMapping("/{id}/upload-photo")
+    @Operation(summary = "Upload driver profile photo", description = "Uploads an image and updates driver's profilePhoto url")
+    public ResponseEntity<String> uploadDriverPhoto(
+            @PathVariable("id") String id,
+            @RequestParam("file") MultipartFile file) {
+        String url = driverService.uploadProfilePhoto(id, file);
+        return ResponseEntity.ok(url);
     }
 
     // Status update endpoints

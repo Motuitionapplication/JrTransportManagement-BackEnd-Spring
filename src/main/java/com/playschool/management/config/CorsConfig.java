@@ -12,7 +12,8 @@ public class CorsConfig {
     private static final String[] ALLOWED_ORIGINS = {
         "http://localhost:4200",
         "http://localhost:3000",
-        "https://playschool-a2z.netlify.app"
+        "https://playschool-a2z.netlify.app",
+        "https://your-frontend-domain.com"
     };
 
     @Bean
