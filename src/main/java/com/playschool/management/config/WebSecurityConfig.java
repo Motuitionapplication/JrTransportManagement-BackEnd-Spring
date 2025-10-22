@@ -86,6 +86,7 @@ public class WebSecurityConfig {
                     .requestMatchers("/api/transport/drivers/**").permitAll()
                     .requestMatchers("/api/vehicles/**").permitAll()
                     .requestMatchers("/api/vehicle-owners/**").permitAll()
+                    .requestMatchers("/api/settings/**").authenticated() 
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                     .anyRequest().authenticated()
             );
