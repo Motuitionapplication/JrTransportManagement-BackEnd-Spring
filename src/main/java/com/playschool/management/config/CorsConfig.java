@@ -13,6 +13,8 @@ public class CorsConfig {
         "http://localhost:4200",
         "http://localhost:3000",
         "https://playschool-a2z.netlify.app",
+        "http://127.0.0.1:5500",
+        "http://localhost:5500"
         "https://your-frontend-domain.com"
     };
 
@@ -30,6 +32,12 @@ public class CorsConfig {
                         .allowedHeaders("*")
                         .allowCredentials(true)
                         .maxAge(3600);
+                
+                registry.addMapping("/ws/**")
+                	.allowedOrigins(ALLOWED_ORIGINS)
+                	.allowedMethods("GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH")
+                	.allowedHeaders("*")
+                	.allowCredentials(true);
 
                 // Swagger UI
                 registry.addMapping("/swagger-ui/**")

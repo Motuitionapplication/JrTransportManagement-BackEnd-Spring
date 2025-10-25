@@ -23,7 +23,10 @@ import com.playschool.management.dto.CustomerResponseDto;
 import com.playschool.management.dto.request.BookingRequest;
 import com.playschool.management.dto.request.PasswordUpdateDto;
 import com.playschool.management.dto.response.CustomerUpdateDto;
+import com.playschool.management.entity.Booking;
 import com.playschool.management.entity.Customer;
+import com.playschool.management.repository.BookingRepository;
+import com.playschool.management.repository.CustomerRepository;
 import com.playschool.management.service.BookingService;
 import com.playschool.management.service.CustomerService;
 
@@ -33,6 +36,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/customers")
@@ -42,6 +46,12 @@ public class CustomerController {
 
     @Autowired
     private CustomerService customerService;
+    
+    @Autowired
+    private CustomerRepository customerRepository;
+    
+    @Autowired
+	private BookingRepository bookingrepo;
     
     @Autowired
     private BookingService bookingService;
@@ -111,15 +121,31 @@ public class CustomerController {
     }
     
     @PostMapping("/{customerId}/booking")
-    public ResponseEntity<Map<String, String>> newBooking(
+    public ResponseEntity<Map<String, Object>> newBooking(
             @PathVariable String customerId,
             @RequestBody BookingRequest bookingRequest) {
 
-        bookingService.newBooking(customerId, bookingRequest);
+    	Booking booking = bookingService.newBooking(customerId, bookingRequest);
 
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Booking Request Sent");
-        return ResponseEntity.ok(response);
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Booking Request Sent Successfully");
+        response.put("bookingId", booking.getId());
+        response.put("bookingNumber", booking.getBookingNumber());
+        response.put("status", booking.getStatus().toString());
+        
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+    }
+    @GetMapping("/{customerId}/booking-history")
+    public ResponseEntity<List<Booking>> getBookingHistory(@PathVariable String customerId) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        List<String> bookingIds = customer.getBookingHistory();
+
+        List<Booking> bookings = bookingrepo.findAllById(bookingIds);
+
+        return ResponseEntity.ok(bookings);
     }
     
 }

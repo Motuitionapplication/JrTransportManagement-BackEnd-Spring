@@ -71,9 +71,11 @@ public class Booking {
     @Embedded
     @AttributeOverrides({
         @AttributeOverride(name = "name", column = @Column(name = "pickup_contact_name")),
-        @AttributeOverride(name = "phoneNumber", column = @Column(name = "pickup_contact_phone"))
+        @AttributeOverride(name = "phoneNumber", column = @Column(name = "pickup_contact_phone")),
+        @AttributeOverride(name = "email", column = @Column(name = "pickup_contact_email"))
     })
     private ContactPerson pickupContact;
+    
     
     private LocalDateTime scheduledPickupDate;
     private String scheduledPickupTime;
@@ -96,7 +98,8 @@ public class Booking {
     @Embedded
     @AttributeOverrides({
         @AttributeOverride(name = "name", column = @Column(name = "delivery_contact_name")),
-        @AttributeOverride(name = "phoneNumber", column = @Column(name = "delivery_contact_phone"))
+        @AttributeOverride(name = "phoneNumber", column = @Column(name = "delivery_contact_phone")),
+        @AttributeOverride(name = "email", column = @Column(name = "delivery_contact_email"))
     })
     private ContactPerson deliveryContact;
     
@@ -237,6 +240,9 @@ public class Booking {
         @Enumerated(EnumType.STRING)
         private CargoType type;
         
+        @Column(name = "goods_category", length = 100)
+        private String goodsCategory;
+        
         @Column(precision = 8, scale = 2)
         private BigDecimal weight; // in kg
         
@@ -254,6 +260,15 @@ public class Booking {
         
         @Column(length = 1000)
         private String specialInstructions;
+        
+        @Column(name = "is_fragile")
+        private Boolean fragile = false;
+        
+        @Column(name = "is_perishable")
+        private Boolean perishable = false;
+        
+        @Column(name = "requires_special_handling")
+        private Boolean requiresSpecialHandling = false;
 
 		public String getDescription() {
 			return description;
@@ -318,6 +333,40 @@ public class Booking {
 		public void setSpecialInstructions(String specialInstructions) {
 			this.specialInstructions = specialInstructions;
 		}
+
+		public String getGoodsCategory() {
+			return goodsCategory;
+		}
+
+		public void setGoodsCategory(String goodsCategory) {
+			this.goodsCategory = goodsCategory;
+		}
+
+		public Boolean getFragile() {
+			return fragile;
+		}
+
+		public void setFragile(Boolean fragile) {
+			this.fragile = fragile;
+		}
+
+		public Boolean getPerishable() {
+			return perishable;
+		}
+
+		public void setPerishable(Boolean perishable) {
+			this.perishable = perishable;
+		}
+
+		public Boolean getRequiresSpecialHandling() {
+			return requiresSpecialHandling;
+		}
+
+		public void setRequiresSpecialHandling(Boolean requiresSpecialHandling) {
+			this.requiresSpecialHandling = requiresSpecialHandling;
+		}
+		
+		
         
         
     }
@@ -380,35 +429,37 @@ public class Booking {
         
     }
     
-	@Embeddable
-	public static class ContactPerson {
-		private String name;
-		private String phoneNumber;
-
-		public ContactPerson() {
-		}
-
-		public ContactPerson(String name, String phoneNumber) {
-			this.name = name;
-			this.phoneNumber = phoneNumber;
-		}
-
+    @Embeddable
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ContactPerson {
+        private String name;
+        private String phoneNumber;
+        @Column(length = 100)
+        @Email(message = "Invalid email format")
+        private String email;
 		public String getName() {
 			return name;
 		}
-
 		public void setName(String name) {
 			this.name = name;
 		}
-
 		public String getPhoneNumber() {
 			return phoneNumber;
 		}
-
 		public void setPhoneNumber(String phoneNumber) {
 			this.phoneNumber = phoneNumber;
 		}
-	}
+		public String getEmail() {
+			return email;
+		}
+		public void setEmail(String email) {
+			this.email = email;
+		}
+        
+        
+    }
     
 	@Embeddable
 	public static class PricingDetails {
@@ -438,23 +489,6 @@ public class Booking {
         
         @Column(precision = 10, scale = 2)
         private BigDecimal finalAmount;
-        
-		public PricingDetails() {
-		}
-
-		public PricingDetails(BigDecimal baseFare, BigDecimal perKmRate, BigDecimal gstAmount,
-				BigDecimal serviceCharge, BigDecimal insuranceCharge, BigDecimal tollCharges,
-				BigDecimal totalAmount, BigDecimal discountAmount, BigDecimal finalAmount) {
-			this.baseFare = baseFare;
-			this.perKmRate = perKmRate;
-			this.gstAmount = gstAmount;
-			this.serviceCharge = serviceCharge;
-			this.insuranceCharge = insuranceCharge;
-			this.tollCharges = tollCharges;
-			this.totalAmount = totalAmount;
-			this.discountAmount = discountAmount;
-			this.finalAmount = finalAmount;
-		}
 
 		public BigDecimal getBaseFare() {
 			return baseFare;
@@ -527,6 +561,8 @@ public class Booking {
 		public void setFinalAmount(BigDecimal finalAmount) {
 			this.finalAmount = finalAmount;
 		}
+        
+        
     }
     
     @Embeddable
@@ -550,6 +586,64 @@ public class Booking {
         private BigDecimal refundAmount;
         
         private LocalDateTime refundDate;
+
+		public PaymentMethod getMethod() {
+			return method;
+		}
+
+		public void setMethod(PaymentMethod method) {
+			this.method = method;
+		}
+
+		public PaymentStatus getStatus() {
+			return status;
+		}
+
+		public void setStatus(PaymentStatus status) {
+			this.status = status;
+		}
+
+		public BigDecimal getPaidAmount() {
+			return paidAmount;
+		}
+
+		public void setPaidAmount(BigDecimal paidAmount) {
+			this.paidAmount = paidAmount;
+		}
+
+		public String getTransactionId() {
+			return transactionId;
+		}
+
+		public void setTransactionId(String transactionId) {
+			this.transactionId = transactionId;
+		}
+
+		public LocalDateTime getPaymentDate() {
+			return paymentDate;
+		}
+
+		public void setPaymentDate(LocalDateTime paymentDate) {
+			this.paymentDate = paymentDate;
+		}
+
+		public BigDecimal getRefundAmount() {
+			return refundAmount;
+		}
+
+		public void setRefundAmount(BigDecimal refundAmount) {
+			this.refundAmount = refundAmount;
+		}
+
+		public LocalDateTime getRefundDate() {
+			return refundDate;
+		}
+
+		public void setRefundDate(LocalDateTime refundDate) {
+			this.refundDate = refundDate;
+		}
+        
+        
     }
 
 	public String getCustomerId() {
@@ -1015,5 +1109,52 @@ public class Booking {
 	public void setUpdatedAt(LocalDateTime updatedAt) {
 		this.updatedAt = updatedAt;
 	}
+	
+	@Column(name = "booking_notes", length = 2000)
+	private String bookingNotes;
+
+	// NEW FIELDS: Vehicle details for quick reference
+	@Column(name = "vehicle_type", length = 50)
+	private String vehicleType; // 'truck', 'van', 'pickup', 'heavy-truck'
+
+	@Column(name = "vehicle_name", length = 100)
+	private String vehicleName; // 'Small Truck (1-2 Ton)'
+
+	@Column(name = "vehicle_capacity")
+	private Integer vehicleCapacity;
+
+	public String getBookingNotes() {
+		return bookingNotes;
+	}
+
+	public void setBookingNotes(String bookingNotes) {
+		this.bookingNotes = bookingNotes;
+	}
+
+	public String getVehicleType() {
+		return vehicleType;
+	}
+
+	public void setVehicleType(String vehicleType) {
+		this.vehicleType = vehicleType;
+	}
+
+	public String getVehicleName() {
+		return vehicleName;
+	}
+
+	public void setVehicleName(String vehicleName) {
+		this.vehicleName = vehicleName;
+	}
+
+	public Integer getVehicleCapacity() {
+		return vehicleCapacity;
+	}
+
+	public void setVehicleCapacity(Integer vehicleCapacity) {
+		this.vehicleCapacity = vehicleCapacity;
+	}
+	
+	
     
 }
