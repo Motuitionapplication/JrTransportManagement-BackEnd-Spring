@@ -461,11 +461,8 @@ public class Booking {
         
     }
     
-    @Embeddable
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class PricingDetails {
+	@Embeddable
+	public static class PricingDetails {
         @Column(precision = 10, scale = 2)
         private BigDecimal baseFare;
         
