@@ -147,7 +147,7 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
     // Find average booking amount
     @Query("SELECT AVG(b.pricing.totalAmount) FROM Booking b WHERE b.status = 'DELIVERED'")
     BigDecimal findAverageBookingAmount();
-    
-    // Check if booking number exists
+        
     boolean existsByBookingNumber(String bookingNumber);
+
 }

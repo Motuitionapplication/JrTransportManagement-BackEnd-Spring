@@ -36,6 +36,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/customers")
@@ -120,15 +121,20 @@ public class CustomerController {
     }
     
     @PostMapping("/{customerId}/booking")
-    public ResponseEntity<Map<String, String>> newBooking(
+    public ResponseEntity<Map<String, Object>> newBooking(
             @PathVariable String customerId,
             @RequestBody BookingRequest bookingRequest) {
 
-        bookingService.newBooking(customerId, bookingRequest);
+    	Booking booking = bookingService.newBooking(customerId, bookingRequest);
 
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Booking Request Sent");
-        return ResponseEntity.ok(response);
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Booking Request Sent Successfully");
+        response.put("bookingId", booking.getId());
+        response.put("bookingNumber", booking.getBookingNumber());
+        response.put("status", booking.getStatus().toString());
+        
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
     }
     @GetMapping("/{customerId}/booking-history")
     public ResponseEntity<List<Booking>> getBookingHistory(@PathVariable String customerId) {
