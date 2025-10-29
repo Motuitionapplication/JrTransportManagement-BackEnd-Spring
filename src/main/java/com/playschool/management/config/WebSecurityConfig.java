@@ -48,7 +48,7 @@ public class WebSecurityConfig {
         this.authenticationJwtTokenFilter = authenticationJwtTokenFilter;
     }
 
-    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:4200,https://jr-transport.netlify.app}")
+    @Value("${cors.allowed-origins:http://localhost:4200,http://localhost:3000,https://jr-transport.netlify.app}")
     private String allowedOrigins;
 
     @Bean
@@ -79,6 +79,12 @@ public class WebSecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth ->
                 auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    // 👇 Add your public endpoints here
+                .requestMatchers("/ws/**", "/sockjs-ws/**").permitAll()
+                    .requestMatchers("/test-broadcast").permitAll()
+                    .requestMatchers("/api/location/**").permitAll()
+
+                    // Existing public APIs
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/admin/**").permitAll()
                     .requestMatchers("/api/customers/**").permitAll()
@@ -86,14 +92,16 @@ public class WebSecurityConfig {
                     .requestMatchers("/api/transport/drivers/**").permitAll()
                     .requestMatchers("/api/vehicles/**").permitAll()
                     .requestMatchers("/api/vehicle-owners/**").permitAll()
+                    .requestMatchers("/api/settings/**").authenticated() 
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
+                    // 👇 Everything else still requires JWT
                     .anyRequest().authenticated()
             );
 
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authenticationJwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // For H2 Console (optional: remove for production)
+        // For H2 Console (optional)
         http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));
 
         return http.build();

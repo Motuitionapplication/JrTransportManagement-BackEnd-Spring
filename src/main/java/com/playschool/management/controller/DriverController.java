@@ -13,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -21,11 +23,19 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.playschool.management.dto.DriverDTO;
+import com.playschool.management.dto.dashboard.DriverBookingSummaryDto;
+import com.playschool.management.dto.dashboard.DriverChartDataDto;
+import com.playschool.management.dto.dashboard.DriverDashboardStatsDto;
+import com.playschool.management.dto.dashboard.DriverMessageSummaryDto;
+import com.playschool.management.dto.dashboard.DriverTripSummaryDto;
 import com.playschool.management.dto.request.AssignVehicleRequestDTO;
+import com.playschool.management.dto.request.MinimalDriverRequestDTO;
 import com.playschool.management.entity.Driver;
 import com.playschool.management.service.DriverService;
 
@@ -41,10 +51,17 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/transport/drivers")
+@CrossOrigin(
+    origins = {"http://localhost:4200", "http://localhost:3000", "https://jr-transport.netlify.app"},
+    methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS},
+    allowedHeaders = {"*"},
+    allowCredentials = "true",
+    maxAge = 3600
+)
 @Tag(name = "Driver Management", description = "APIs for managing drivers in the transport system")
-// @CrossOrigin(origins = "*")
 public class DriverController {
 
+    private static final Logger log = LoggerFactory.getLogger(DriverController.class);
     private final DriverService driverService;
     
     @Autowired
@@ -63,6 +80,24 @@ public class DriverController {
             @Valid @RequestBody Driver driver) {
         Driver savedDriver = driverService.createDriver(driver);
         return new ResponseEntity<>(savedDriver, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/minimal")
+    @PreAuthorize("hasRole('DRIVER') or hasRole('ADMIN')")
+    @Operation(summary = "Ensure minimal driver profile", description = "Create a minimal driver record when missing")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Driver created successfully"),
+        @ApiResponse(responseCode = "200", description = "Existing driver returned"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data")
+    })
+    public ResponseEntity<Driver> createMinimalDriver(@Valid @RequestBody MinimalDriverRequestDTO request) {
+        // COPILOT-FIX: support frontend auto-creation when user logs in without an existing driver row
+        Optional<Driver> existing = driverService.findByUserId(request.getUserId());
+        if (existing.isPresent()) {
+            return ResponseEntity.ok(existing.get());
+        }
+        Driver created = driverService.createMinimalDriver(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @GetMapping
@@ -380,6 +415,16 @@ public class DriverController {
         return ResponseEntity.ok(exists);
     }
 
+    @PreAuthorize("hasRole('DRIVER')")
+    @PostMapping("/{id}/upload-photo")
+    @Operation(summary = "Upload driver profile photo", description = "Uploads an image and updates driver's profilePhoto url")
+    public ResponseEntity<String> uploadDriverPhoto(
+            @PathVariable("id") String id,
+            @RequestParam("file") MultipartFile file) {
+        String url = driverService.uploadProfilePhoto(id, file);
+        return ResponseEntity.ok(url);
+    }
+
     // Status update endpoints
     @PatchMapping("/{id}/status")
     @Operation(summary = "Update driver status", description = "Update the status of a driver")
@@ -419,8 +464,6 @@ public class DriverController {
             return ResponseEntity.notFound().build();
         }
     }
-    private static final Logger log = LoggerFactory.getLogger(DriverService.class);
-
     @PatchMapping("/{driverId}/assign-vehicle")
     @Operation(summary = "Assign a vehicle to a driver", description = "Updates both the driver's assigned vehicles and the vehicle's driverId.")
     public ResponseEntity<Driver> assignVehicleToDriver(
@@ -464,6 +507,127 @@ public class DriverController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/health")
+    @Operation(summary = "Health check for driver dashboard endpoints")
+    public ResponseEntity<String> healthCheck() {
+        log.info("🏥 Driver controller health check requested");
+        return ResponseEntity.ok("Driver Dashboard Controller is healthy and ready!");
+    }
+
+    @GetMapping("/test")
+    @Operation(summary = "Test endpoint for frontend connectivity")
+    public ResponseEntity<String> testEndpoint() {
+        log.info("🧪 Driver controller test endpoint accessed");
+        return ResponseEntity.ok("Driver Dashboard API is accessible from frontend!");
+    }
+
+    @GetMapping("/dashboard/{userId}/stats")
+    @Operation(
+        summary = "Driver dashboard statistics",
+        description = "Fetch aggregated KPIs required by the driver dashboard header."
+    )
+    public ResponseEntity<DriverDashboardStatsDto> getDashboardStats(@PathVariable String userId) {
+        log.info("🚗 Fetching dashboard stats for driver userId: {}", userId);
+        try {
+            DriverDashboardStatsDto stats = driverService.getDashboardStats(userId);
+            log.info("✅ Successfully retrieved dashboard stats for userId: {}", userId);
+            return ResponseEntity.ok(stats);
+        } catch (EntityNotFoundException ex) {
+            log.warn("❌ Driver not found for dashboard stats, userId: {}", userId);
+            return ResponseEntity.notFound().build();
+        } catch (Exception ex) {
+            log.error("💥 Error fetching dashboard stats for userId: {}", userId, ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/{userId}/trips")
+    @Operation(
+        summary = "Recent driver trips",
+        description = "Returns the latest completed trips for the driver timeline widget."
+    )
+    public ResponseEntity<List<DriverTripSummaryDto>> getRecentTrips(
+            @PathVariable String userId,
+            @RequestParam(name = "limit", defaultValue = "5") int limit) {
+        log.info("🚗 Fetching {} recent trips for driver userId: {}", limit, userId);
+        try {
+            List<DriverTripSummaryDto> trips = driverService.getRecentTrips(userId, limit);
+            log.info("✅ Retrieved {} trips for userId: {}", trips.size(), userId);
+            return ResponseEntity.ok(trips);
+        } catch (EntityNotFoundException ex) {
+            log.warn("❌ Driver not found for trips request, userId: {}", userId);
+            return ResponseEntity.notFound().build();
+        } catch (Exception ex) {
+            log.error("💥 Error fetching trips for userId: {}", userId, ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/{userId}/bookings/active")
+    @Operation(
+        summary = "Active driver bookings",
+        description = "Returns active bookings assigned to the driver for quick actions."
+    )
+    public ResponseEntity<List<DriverBookingSummaryDto>> getActiveBookings(
+            @PathVariable String userId,
+            @RequestParam(name = "limit", defaultValue = "5") int limit) {
+        log.info("🚗 Fetching {} active bookings for driver userId: {}", limit, userId);
+        try {
+            List<DriverBookingSummaryDto> bookings = driverService.getActiveBookings(userId, limit);
+            log.info("✅ Retrieved {} active bookings for userId: {}", bookings.size(), userId);
+            return ResponseEntity.ok(bookings);
+        } catch (EntityNotFoundException ex) {
+            log.warn("❌ Driver not found for active bookings request, userId: {}", userId);
+            return ResponseEntity.notFound().build();
+        } catch (Exception ex) {
+            log.error("💥 Error fetching active bookings for userId: {}", userId, ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/{userId}/messages/summary")
+    @Operation(
+        summary = "Driver message summary",
+        description = "Returns a light-weight summary of recent driver conversations."
+    )
+    public ResponseEntity<List<DriverMessageSummaryDto>> getMessageSummary(
+            @PathVariable String userId,
+            @RequestParam(name = "limit", defaultValue = "5") int limit) {
+        log.info("🚗 Fetching {} message summaries for driver userId: {}", limit, userId);
+        try {
+            List<DriverMessageSummaryDto> messages = driverService.getMessageSummary(userId, limit);
+            log.info("✅ Retrieved {} message summaries for userId: {}", messages.size(), userId);
+            return ResponseEntity.ok(messages);
+        } catch (EntityNotFoundException ex) {
+            log.warn("❌ Driver not found for message summary request, userId: {}", userId);
+            return ResponseEntity.notFound().build();
+        } catch (Exception ex) {
+            log.error("💥 Error fetching message summaries for userId: {}", userId, ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/{userId}/dashboard/chart")
+    @Operation(
+        summary = "Driver dashboard chart data",
+        description = "Returns earnings chart data for the driver for the last seven days."
+    )
+    public ResponseEntity<DriverChartDataDto> getChartData(@PathVariable String userId) {
+        log.info("🚗 Fetching dashboard chart data for driver userId: {}", userId);
+        try {
+            DriverChartDataDto chart = driverService.getChartData(userId);
+            log.info("✅ Retrieved chart data with {} data points for userId: {}",
+                    chart.getSeries() != null ? chart.getSeries().size() : 0, userId);
+            return ResponseEntity.ok(chart);
+        } catch (EntityNotFoundException ex) {
+            log.warn("❌ Driver not found for chart data request, userId: {}", userId);
+            return ResponseEntity.notFound().build();
+        } catch (Exception ex) {
+            log.error("💥 Error fetching chart data for userId: {}", userId, ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

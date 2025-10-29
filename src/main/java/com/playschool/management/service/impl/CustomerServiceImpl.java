@@ -9,9 +9,12 @@ import org.springframework.stereotype.Service;
 
 import com.playschool.management.dto.CustomerCreateDto;
 import com.playschool.management.dto.CustomerResponseDto;
+import com.playschool.management.dto.request.PasswordUpdateDto;
 import com.playschool.management.dto.response.CustomerUpdateDto;
 import com.playschool.management.entity.Customer;
+import com.playschool.management.entity.User;
 import com.playschool.management.repository.CustomerRepository;
+import com.playschool.management.repository.UserRepository;
 import com.playschool.management.service.CustomerService;
 
 import jakarta.transaction.Transactional;
@@ -26,6 +29,9 @@ public class CustomerServiceImpl implements CustomerService {
     public List<Customer> getAllCustomers() {
         return customerRepository.findAll();
     }
+    
+    @Autowired
+    private UserRepository userRepository;
 
 
     @Autowired
@@ -81,14 +87,40 @@ public class CustomerServiceImpl implements CustomerService {
         Customer existing = customerRepository.findById(customerId)
                 .orElseThrow(() -> new RuntimeException("Customer not found: " + customerId));
 
-        existing.setFirstName(dto.getFirstName());
-        existing.setLastName(dto.getLastName());
-        existing.setEmail(dto.getEmail());
-        existing.setPhoneNumber(dto.getPhoneNumber());
-        existing.setAccountStatus(dto.getAccountStatus());
+        if (dto.getFirstName() != null) {
+            existing.setFirstName(dto.getFirstName());
+        }
+        if (dto.getLastName() != null) {
+            existing.setLastName(dto.getLastName());
+        }
+        if (dto.getEmail() != null) {
+            existing.setEmail(dto.getEmail());
+        }
+        if (dto.getPhoneNumber() != null) {
+            existing.setPhoneNumber(dto.getPhoneNumber());
+        }
+        if (dto.getAccountStatus() != null) {
+            existing.setAccountStatus(dto.getAccountStatus());
+        }
+        
+        User user = userRepository.findById(Long.valueOf(existing.getUserId()))
+                .orElseThrow(() -> new RuntimeException("User not found for customer: " + customerId));
+
+        if (dto.getFirstName() != null) {
+            user.setFirstName(dto.getFirstName());
+        }
+        if (dto.getLastName() != null) {
+            user.setLastName(dto.getLastName());
+        }
+        if (dto.getEmail() != null) {
+            user.setEmail(dto.getEmail());
+        }
+        
+        userRepository.save(user);
 
         return customerRepository.save(existing);
     }
+
 
     @Override
     public boolean deleteCustomerById(String customerId) {
@@ -132,5 +164,26 @@ public class CustomerServiceImpl implements CustomerService {
 
         Customer saved = customerRepository.save(customer);
         return mapToResponseDto(saved);
+    }
+    public String getid(String userid) {
+        Customer cust = customerRepository.findByUserId(userid)
+                .orElseThrow(() -> new RuntimeException("Customer not found for user ID: " + userid));
+        return cust.getId().toString();
+    }
+    @Override
+    public void updateCustomerPassword(String customerId, PasswordUpdateDto dto) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        User user = userRepository.findById(Long.valueOf(customer.getUserId()))
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+
+        if (!passwordEncoder.matches(dto.getOldPassword(), user.getPassword())) {
+            throw new RuntimeException("Old password does not match");
+        }
+
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        userRepository.save(user);
     }
 }

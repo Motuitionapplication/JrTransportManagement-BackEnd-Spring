@@ -1,11 +1,18 @@
 package com.playschool.management.service;
 
 import java.math.BigDecimal;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.Base64;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,16 +21,26 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.playschool.management.dto.DriverDTO;
+import com.playschool.management.dto.dashboard.DriverBookingSummaryDto;
+import com.playschool.management.dto.dashboard.DriverChartDataDto;
+import com.playschool.management.dto.dashboard.DriverDashboardStatsDto;
+import com.playschool.management.dto.dashboard.DriverMessageSummaryDto;
+import com.playschool.management.dto.dashboard.DriverTripSummaryDto;
 import com.playschool.management.entity.AssignmentHistory;
+import com.playschool.management.entity.Booking;
 import com.playschool.management.entity.Driver;
 import com.playschool.management.entity.Vehicle;
+import com.playschool.management.dto.request.MinimalDriverRequestDTO;
 import com.playschool.management.repository.AssignmentHistoryRepository;
+import com.playschool.management.repository.BookingRepository;
 import com.playschool.management.repository.DriverRepository;
 import com.playschool.management.repository.VehicleRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.util.StringUtils;
 
 @Service
 @Transactional
@@ -34,12 +51,15 @@ public class DriverService {
     private final DriverRepository driverRepository;
     private final VehicleRepository vehicleRepository;
     private final AssignmentHistoryRepository assignmentHistoryRepository;
+    private final BookingRepository bookingRepository;
     
     @Autowired
-    public DriverService(DriverRepository driverRepository, VehicleRepository vehicleRepository, AssignmentHistoryRepository assignmentHistoryRepository) { 
+    public DriverService(DriverRepository driverRepository, VehicleRepository vehicleRepository,
+            AssignmentHistoryRepository assignmentHistoryRepository, BookingRepository bookingRepository) { 
         this.driverRepository = driverRepository;
         this.vehicleRepository = vehicleRepository; 
         this.assignmentHistoryRepository = assignmentHistoryRepository;
+        this.bookingRepository = bookingRepository;
     }
     public enum DriverStatus { AVAILABLE, ON_TRIP, OFF_DUTY, BREAK }
 
@@ -110,6 +130,76 @@ public class DriverService {
     @Transactional(readOnly = true)
     public Optional<Driver> findByUserId(String userId) {
         return driverRepository.findByUserId(userId);
+    }
+
+    public Driver createMinimalDriver(MinimalDriverRequestDTO request) {
+        // COPILOT-FIX: backend safeguard to auto-provision drivers missing profile rows
+        final String userId = request.getUserId();
+        log.info("Auto-creating minimal driver profile for userId={}", userId);
+
+        Optional<Driver> existing = driverRepository.findByUserId(userId);
+        if (existing.isPresent()) {
+            log.info("Minimal profile request skipped; driver already exists for userId={}.", userId);
+            return existing.get();
+        }
+
+        Driver driver = new Driver();
+        driver.setUserId(userId);
+
+        String firstName = StringUtils.hasText(request.getFirstName()) ? request.getFirstName() : "Driver";
+        String lastName = StringUtils.hasText(request.getLastName()) ? request.getLastName() : "Profile";
+
+        driver.setFirstName(firstName);
+        driver.setLastName(lastName);
+        driver.setFatherName(StringUtils.hasText(request.getLastName()) ? request.getLastName() : "Pending Update");
+        driver.setEmail(resolveEmailForMinimalProfile(request));
+        driver.setPhoneNumber(resolvePhoneForMinimalProfile(request));
+        driver.setProfilePhoto(buildAvatarPlaceholder(firstName, lastName));
+        driver.setBloodGroup("UNKNOWN");
+        driver.setDateOfBirth(LocalDate.of(1990, 1, 1));
+        driver.setPassword("AUTO-" + UUID.randomUUID());
+
+        driver.setStatus(Driver.DriverStatus.AVAILABLE);
+        driver.setAccountStatus(Driver.AccountStatus.ACTIVE);
+        driver.setVerificationStatus(Driver.VerificationStatus.PENDING);
+        driver.setBackgroundCheckStatus(Driver.BackgroundCheckStatus.PENDING);
+
+        driver.setWorkingDays(new ArrayList<>());
+        driver.setAssignedVehicles(new ArrayList<>());
+        driver.setPreviousEmployers(new ArrayList<>());
+        driver.setSpecializations(new ArrayList<>());
+        driver.setTripHistory(new ArrayList<>());
+
+        driver.setCurrentRewardPoints(0);
+        driver.setTotalEarnedPoints(0);
+        driver.setRedeemedPoints(0);
+        driver.setTotalYearsExperience(0);
+        driver.setTotalTripsCompleted(0);
+
+        return driverRepository.save(driver);
+    }
+
+    private String resolveEmailForMinimalProfile(MinimalDriverRequestDTO request) {
+        if (StringUtils.hasText(request.getEmail())) {
+            return request.getEmail();
+        }
+        String sanitized = request.getUserId().replaceAll("[^A-Za-z0-9]", "").toLowerCase();
+        if (!StringUtils.hasText(sanitized)) {
+            sanitized = UUID.randomUUID().toString().replace("-", "");
+        }
+        return sanitized + "@autogen.driver.local";
+    }
+
+    private String resolvePhoneForMinimalProfile(MinimalDriverRequestDTO request) {
+        if (StringUtils.hasText(request.getPhoneNumber())) {
+            return request.getPhoneNumber();
+        }
+        return "AUTO-" + request.getUserId();
+    }
+
+    private String buildAvatarPlaceholder(String firstName, String lastName) {
+        String initials = (String.valueOf(firstName.charAt(0)) + String.valueOf(lastName.charAt(0))).toUpperCase();
+        return "https://ui-avatars.com/api/?background=2563eb&color=fff&name=" + initials;
     }
 
     @Transactional(readOnly = true)
@@ -330,6 +420,191 @@ public class DriverService {
         }
         return driverRepository.save(driver);
     }
+
+    @Transactional(readOnly = true)
+    public DriverDashboardStatsDto getDashboardStats(String userId) {
+        log.info("🚗 DriverService: Fetching dashboard stats for userId: {}", userId);
+        Driver driver = driverRepository.findByUserId(userId)
+            .orElseThrow(() -> {
+                log.warn("❌ DriverService: No driver found with userId: {}", userId);
+                return new EntityNotFoundException("Driver not found with userId: " + userId);
+            });
+
+        List<Booking> driverBookings = bookingRepository.findByDriverId(driver.getId());
+        log.info("📊 DriverService: Found {} bookings for driver {}", driverBookings.size(), userId);
+
+    LocalDate today = LocalDate.now();
+
+    BigDecimal totalEarnings = driverBookings.stream()
+        .filter(booking -> booking.getStatus() == Booking.BookingStatus.DELIVERED)
+        .map(this::extractFinalAmount)
+        .filter(java.util.Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    BigDecimal todaysEarnings = driverBookings.stream()
+        .filter(booking -> booking.getStatus() == Booking.BookingStatus.DELIVERED)
+        .map(booking -> {
+            BigDecimal amount = extractFinalAmount(booking);
+            LocalDateTime deliveredAt = resolveDeliveredAt(booking);
+            if (amount != null && deliveredAt != null && deliveredAt.toLocalDate().isEqual(today)) {
+                return amount;
+            }
+            return BigDecimal.ZERO;
+        })
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    int tripsToday = (int) driverBookings.stream()
+        .filter(booking -> booking.getScheduledPickupDate() != null
+            && booking.getScheduledPickupDate().toLocalDate().isEqual(today))
+        .count();
+
+    long activeBookings = driverBookings.stream()
+        .filter(booking -> booking.getStatus() != null)
+        .filter(booking -> EnumSet.of(
+            Booking.BookingStatus.CONFIRMED,
+            Booking.BookingStatus.ASSIGNED,
+            Booking.BookingStatus.PICKED_UP,
+            Booking.BookingStatus.IN_TRANSIT)
+            .contains(booking.getStatus()))
+        .count();
+
+    int unreadMessages = 3; // TODO wire unread count from BookingMessageRepository when conversation tracking is implemented
+
+    return new DriverDashboardStatsDto(
+        totalEarnings.doubleValue(),
+        todaysEarnings.doubleValue(),
+        tripsToday,
+        (int) activeBookings,
+        unreadMessages);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DriverTripSummaryDto> getRecentTrips(String userId, int limit) {
+    Driver driver = driverRepository.findByUserId(userId)
+        .orElseThrow(() -> new EntityNotFoundException("Driver not found with userId: " + userId));
+
+    int effectiveLimit = limit > 0 ? limit : 5;
+
+    List<Booking> completedBookings = bookingRepository.findCompletedBookingsByDriver(driver.getId());
+    log.info("📊 DriverService: Found {} completed bookings for driver {}", completedBookings.size(), userId);
+
+    return completedBookings.stream()
+        .sorted((left, right) -> {
+            LocalDateTime leftDate = resolvePickupTime(left);
+            LocalDateTime rightDate = resolvePickupTime(right);
+            if (leftDate == null && rightDate == null) {
+                return 0;
+            }
+            if (leftDate == null) {
+                return 1;
+            }
+            if (rightDate == null) {
+                return -1;
+            }
+            return rightDate.compareTo(leftDate);
+        })
+        .limit(effectiveLimit)
+        .map(booking -> {
+            String bookingId = booking.getId() != null ? booking.getId().toString() : "N/A";
+            String pickupCity = resolveCity(booking.getPickupAddress(), "Pickup TBD");
+            String dropCity = resolveCity(booking.getDeliveryAddress(), "Destination TBD");
+            LocalDateTime pickupTime = resolvePickupTimeWithFallback(booking);
+            String status = booking.getStatus() != null ? booking.getStatus().name() : "PENDING";
+            BigDecimal finalAmount = extractFinalAmount(booking);
+            double amount = finalAmount != null ? finalAmount.doubleValue() : 0.0;
+            return new DriverTripSummaryDto(bookingId, pickupCity, dropCity, pickupTime, status, amount);
+        })
+        .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<DriverBookingSummaryDto> getActiveBookings(String userId, int limit) {
+    Driver driver = driverRepository.findByUserId(userId)
+        .orElseThrow(() -> new EntityNotFoundException("Driver not found with userId: " + userId));
+
+    int effectiveLimit = limit > 0 ? limit : 5;
+
+    List<Booking> activeBookings = bookingRepository.findActiveBookings().stream()
+        .filter(booking -> driver.getId().equals(booking.getDriverId()))
+        .collect(Collectors.toList());
+    
+    log.info("📊 DriverService: Found {} active bookings for driver {}", activeBookings.size(), userId);
+
+    return activeBookings.stream()
+        .sorted((left, right) -> {
+            LocalDateTime leftDate = left.getScheduledPickupDate();
+            LocalDateTime rightDate = right.getScheduledPickupDate();
+            if (leftDate == null && rightDate == null) {
+            return 0;
+            }
+            if (leftDate == null) {
+            return 1;
+            }
+            if (rightDate == null) {
+            return -1;
+            }
+            return leftDate.compareTo(rightDate);
+        })
+        .limit(effectiveLimit)
+        .map(booking -> new DriverBookingSummaryDto(
+            booking.getId(),
+            resolveCustomerName(booking),
+            booking.getScheduledPickupDate() != null ? booking.getScheduledPickupDate() : LocalDateTime.now(),
+            resolveCity(booking.getDeliveryAddress(), "Destination TBD"),
+            booking.getStatus() != null ? booking.getStatus().name() : Booking.BookingStatus.CONFIRMED.name()))
+        .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<DriverMessageSummaryDto> getMessageSummary(String userId, int limit) {
+    driverRepository.findByUserId(userId)
+        .orElseThrow(() -> new EntityNotFoundException("Driver not found with userId: " + userId));
+
+    // TODO: Implement real message repository integration
+    log.info("📊 DriverService: Message summary not yet implemented for driver {}", userId);
+    
+    // Return empty list until BookingMessageRepository is implemented
+    return new ArrayList<>();
+    }
+
+    @Transactional(readOnly = true)
+    public DriverChartDataDto getChartData(String userId) {
+    Driver driver = driverRepository.findByUserId(userId)
+        .orElseThrow(() -> new EntityNotFoundException("Driver not found with userId: " + userId));
+
+    List<Booking> completedBookings = bookingRepository.findCompletedBookingsByDriver(driver.getId());
+
+    LocalDate today = LocalDate.now();
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM");
+    List<String> labels = new ArrayList<>();
+    List<Double> series = new ArrayList<>();
+
+    for (int i = 6; i >= 0; i--) {
+        LocalDate day = today.minusDays(i);
+        labels.add(day.format(formatter));
+
+        double totalForDay = completedBookings.stream()
+            .filter(booking -> {
+            LocalDateTime deliveredAt = booking.getActualDeliveryTime() != null
+                ? booking.getActualDeliveryTime()
+                : booking.getUpdatedAt();
+            return deliveredAt != null && deliveredAt.toLocalDate().isEqual(day);
+            })
+            .map(Booking::getPricing)
+            .filter(java.util.Objects::nonNull)
+            .map(pricing -> pricing.getFinalAmount())
+            .filter(java.util.Objects::nonNull)
+            .mapToDouble(BigDecimal::doubleValue)
+            .sum();
+
+        series.add(totalForDay);
+    }
+
+    log.info("📊 DriverService: Generated chart with {} data points for driver {}", series.size(), userId);
+
+    return new DriverChartDataDto(labels, series);
+    }
+
     @Transactional
     public Driver assignVehicle(String driverId, String vehicleId) {
         // 1. Fetch the core entities
@@ -406,4 +681,88 @@ public class DriverService {
         return driverRepository.save(driver);
     }
 
+    private BigDecimal extractFinalAmount(Booking booking) {
+        if (booking == null) {
+            return null;
+        }
+        Booking.PricingDetails pricing = booking.getPricing();
+        return pricing != null ? pricing.getFinalAmount() : null;
+    }
+
+    private LocalDateTime resolveDeliveredAt(Booking booking) {
+        if (booking == null) {
+            return null;
+        }
+        if (booking.getActualDeliveryTime() != null) {
+            return booking.getActualDeliveryTime();
+        }
+        return booking.getUpdatedAt();
+    }
+
+    private LocalDateTime resolvePickupTime(Booking booking) {
+        if (booking == null) {
+            return null;
+        }
+        if (booking.getScheduledPickupDate() != null) {
+            return booking.getScheduledPickupDate();
+        }
+        return booking.getActualPickupTime();
+    }
+
+    private LocalDateTime resolvePickupTimeWithFallback(Booking booking) {
+        LocalDateTime pickup = resolvePickupTime(booking);
+        return pickup != null ? pickup : LocalDateTime.now();
+    }
+
+    private String resolveCity(Booking.BookingAddress address, String fallback) {
+        if (address != null && address.getCity() != null && !address.getCity().isBlank()) {
+            return address.getCity();
+        }
+        return fallback;
+    }
+
+    private String resolveCustomerName(Booking booking) {
+        if (booking == null) {
+            return "Valued Customer";
+        }
+        Booking.ContactPerson contactPerson = booking.getPickupContact();
+        if (contactPerson != null && contactPerson.getName() != null && !contactPerson.getName().isBlank()) {
+            return contactPerson.getName();
+        }
+        return "Valued Customer";
+    }
+
+    /**
+     * Accepts an image file, validates size/type, stores as data URL in profilePhoto, and returns the URL.
+     */
+    @Transactional
+    public String uploadProfilePhoto(String driverId, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File is required");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !(contentType.equals("image/png") || contentType.equals("image/jpeg"))) {
+            throw new IllegalArgumentException("Only PNG or JPEG files are allowed");
+        }
+
+        long maxBytes = 2L * 1024L * 1024L; // 2MB
+        if (file.getSize() > maxBytes) {
+            throw new IllegalArgumentException("File size exceeds 2MB limit");
+        }
+
+        Driver driver = driverRepository.findById(driverId)
+            .orElseThrow(() -> new EntityNotFoundException("Driver not found with id: " + driverId));
+
+        try {
+            String base64 = Base64.getEncoder().encodeToString(file.getBytes());
+            String dataUrl = "data:" + contentType + ";base64," + base64;
+            driver.setProfilePhoto(dataUrl);
+            driverRepository.save(driver);
+            log.info("Updated profile photo for driver {} ({} bytes)", driverId, file.getSize());
+            return dataUrl;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to process uploaded image", e);
+        }
+    }
 }

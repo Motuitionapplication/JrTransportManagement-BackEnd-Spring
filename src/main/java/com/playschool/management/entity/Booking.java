@@ -71,9 +71,11 @@ public class Booking {
     @Embedded
     @AttributeOverrides({
         @AttributeOverride(name = "name", column = @Column(name = "pickup_contact_name")),
-        @AttributeOverride(name = "phoneNumber", column = @Column(name = "pickup_contact_phone"))
+        @AttributeOverride(name = "phoneNumber", column = @Column(name = "pickup_contact_phone")),
+        @AttributeOverride(name = "email", column = @Column(name = "pickup_contact_email"))
     })
     private ContactPerson pickupContact;
+    
     
     private LocalDateTime scheduledPickupDate;
     private String scheduledPickupTime;
@@ -96,7 +98,8 @@ public class Booking {
     @Embedded
     @AttributeOverrides({
         @AttributeOverride(name = "name", column = @Column(name = "delivery_contact_name")),
-        @AttributeOverride(name = "phoneNumber", column = @Column(name = "delivery_contact_phone"))
+        @AttributeOverride(name = "phoneNumber", column = @Column(name = "delivery_contact_phone")),
+        @AttributeOverride(name = "email", column = @Column(name = "delivery_contact_email"))
     })
     private ContactPerson deliveryContact;
     
@@ -237,6 +240,9 @@ public class Booking {
         @Enumerated(EnumType.STRING)
         private CargoType type;
         
+        @Column(name = "goods_category", length = 100)
+        private String goodsCategory;
+        
         @Column(precision = 8, scale = 2)
         private BigDecimal weight; // in kg
         
@@ -254,6 +260,115 @@ public class Booking {
         
         @Column(length = 1000)
         private String specialInstructions;
+        
+        @Column(name = "is_fragile")
+        private Boolean fragile = false;
+        
+        @Column(name = "is_perishable")
+        private Boolean perishable = false;
+        
+        @Column(name = "requires_special_handling")
+        private Boolean requiresSpecialHandling = false;
+
+		public String getDescription() {
+			return description;
+		}
+
+		public void setDescription(String description) {
+			this.description = description;
+		}
+
+		public CargoType getType() {
+			return type;
+		}
+
+		public void setType(CargoType type) {
+			this.type = type;
+		}
+
+		public BigDecimal getWeight() {
+			return weight;
+		}
+
+		public void setWeight(BigDecimal weight) {
+			this.weight = weight;
+		}
+
+		public BigDecimal getLength() {
+			return length;
+		}
+
+		public void setLength(BigDecimal length) {
+			this.length = length;
+		}
+
+		public BigDecimal getWidth() {
+			return width;
+		}
+
+		public void setWidth(BigDecimal width) {
+			this.width = width;
+		}
+
+		public BigDecimal getHeight() {
+			return height;
+		}
+
+		public void setHeight(BigDecimal height) {
+			this.height = height;
+		}
+
+		public BigDecimal getValue() {
+			return value;
+		}
+
+		public void setValue(BigDecimal value) {
+			this.value = value;
+		}
+
+		public String getSpecialInstructions() {
+			return specialInstructions;
+		}
+
+		public void setSpecialInstructions(String specialInstructions) {
+			this.specialInstructions = specialInstructions;
+		}
+
+		public String getGoodsCategory() {
+			return goodsCategory;
+		}
+
+		public void setGoodsCategory(String goodsCategory) {
+			this.goodsCategory = goodsCategory;
+		}
+
+		public Boolean getFragile() {
+			return fragile;
+		}
+
+		public void setFragile(Boolean fragile) {
+			this.fragile = fragile;
+		}
+
+		public Boolean getPerishable() {
+			return perishable;
+		}
+
+		public void setPerishable(Boolean perishable) {
+			this.perishable = perishable;
+		}
+
+		public Boolean getRequiresSpecialHandling() {
+			return requiresSpecialHandling;
+		}
+
+		public void setRequiresSpecialHandling(Boolean requiresSpecialHandling) {
+			this.requiresSpecialHandling = requiresSpecialHandling;
+		}
+		
+		
+        
+        
     }
     
     @Embeddable
@@ -268,6 +383,50 @@ public class Booking {
         private String country;
         private Double latitude;
         private Double longitude;
+		public String getStreet() {
+			return street;
+		}
+		public void setStreet(String street) {
+			this.street = street;
+		}
+		public String getCity() {
+			return city;
+		}
+		public void setCity(String city) {
+			this.city = city;
+		}
+		public String getState() {
+			return state;
+		}
+		public void setState(String state) {
+			this.state = state;
+		}
+		public String getPincode() {
+			return pincode;
+		}
+		public void setPincode(String pincode) {
+			this.pincode = pincode;
+		}
+		public String getCountry() {
+			return country;
+		}
+		public void setCountry(String country) {
+			this.country = country;
+		}
+		public Double getLatitude() {
+			return latitude;
+		}
+		public void setLatitude(Double latitude) {
+			this.latitude = latitude;
+		}
+		public Double getLongitude() {
+			return longitude;
+		}
+		public void setLongitude(Double longitude) {
+			this.longitude = longitude;
+		}
+        
+        
     }
     
     @Embeddable
@@ -277,13 +436,33 @@ public class Booking {
     public static class ContactPerson {
         private String name;
         private String phoneNumber;
+        @Column(length = 100)
+        @Email(message = "Invalid email format")
+        private String email;
+		public String getName() {
+			return name;
+		}
+		public void setName(String name) {
+			this.name = name;
+		}
+		public String getPhoneNumber() {
+			return phoneNumber;
+		}
+		public void setPhoneNumber(String phoneNumber) {
+			this.phoneNumber = phoneNumber;
+		}
+		public String getEmail() {
+			return email;
+		}
+		public void setEmail(String email) {
+			this.email = email;
+		}
+        
+        
     }
     
-    @Embeddable
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class PricingDetails {
+	@Embeddable
+	public static class PricingDetails {
         @Column(precision = 10, scale = 2)
         private BigDecimal baseFare;
         
@@ -310,6 +489,80 @@ public class Booking {
         
         @Column(precision = 10, scale = 2)
         private BigDecimal finalAmount;
+
+		public BigDecimal getBaseFare() {
+			return baseFare;
+		}
+
+		public void setBaseFare(BigDecimal baseFare) {
+			this.baseFare = baseFare;
+		}
+
+		public BigDecimal getPerKmRate() {
+			return perKmRate;
+		}
+
+		public void setPerKmRate(BigDecimal perKmRate) {
+			this.perKmRate = perKmRate;
+		}
+
+		public BigDecimal getGstAmount() {
+			return gstAmount;
+		}
+
+		public void setGstAmount(BigDecimal gstAmount) {
+			this.gstAmount = gstAmount;
+		}
+
+		public BigDecimal getServiceCharge() {
+			return serviceCharge;
+		}
+
+		public void setServiceCharge(BigDecimal serviceCharge) {
+			this.serviceCharge = serviceCharge;
+		}
+
+		public BigDecimal getInsuranceCharge() {
+			return insuranceCharge;
+		}
+
+		public void setInsuranceCharge(BigDecimal insuranceCharge) {
+			this.insuranceCharge = insuranceCharge;
+		}
+
+		public BigDecimal getTollCharges() {
+			return tollCharges;
+		}
+
+		public void setTollCharges(BigDecimal tollCharges) {
+			this.tollCharges = tollCharges;
+		}
+
+		public BigDecimal getTotalAmount() {
+			return totalAmount;
+		}
+
+		public void setTotalAmount(BigDecimal totalAmount) {
+			this.totalAmount = totalAmount;
+		}
+
+		public BigDecimal getDiscountAmount() {
+			return discountAmount;
+		}
+
+		public void setDiscountAmount(BigDecimal discountAmount) {
+			this.discountAmount = discountAmount;
+		}
+
+		public BigDecimal getFinalAmount() {
+			return finalAmount;
+		}
+
+		public void setFinalAmount(BigDecimal finalAmount) {
+			this.finalAmount = finalAmount;
+		}
+        
+        
     }
     
     @Embeddable
@@ -333,5 +586,575 @@ public class Booking {
         private BigDecimal refundAmount;
         
         private LocalDateTime refundDate;
+
+		public PaymentMethod getMethod() {
+			return method;
+		}
+
+		public void setMethod(PaymentMethod method) {
+			this.method = method;
+		}
+
+		public PaymentStatus getStatus() {
+			return status;
+		}
+
+		public void setStatus(PaymentStatus status) {
+			this.status = status;
+		}
+
+		public BigDecimal getPaidAmount() {
+			return paidAmount;
+		}
+
+		public void setPaidAmount(BigDecimal paidAmount) {
+			this.paidAmount = paidAmount;
+		}
+
+		public String getTransactionId() {
+			return transactionId;
+		}
+
+		public void setTransactionId(String transactionId) {
+			this.transactionId = transactionId;
+		}
+
+		public LocalDateTime getPaymentDate() {
+			return paymentDate;
+		}
+
+		public void setPaymentDate(LocalDateTime paymentDate) {
+			this.paymentDate = paymentDate;
+		}
+
+		public BigDecimal getRefundAmount() {
+			return refundAmount;
+		}
+
+		public void setRefundAmount(BigDecimal refundAmount) {
+			this.refundAmount = refundAmount;
+		}
+
+		public LocalDateTime getRefundDate() {
+			return refundDate;
+		}
+
+		public void setRefundDate(LocalDateTime refundDate) {
+			this.refundDate = refundDate;
+		}
+        
+        
     }
+
+	public String getCustomerId() {
+		return customerId;
+	}
+
+	public void setCustomerId(String customerId) {
+		this.customerId = customerId;
+	}
+
+	public String getVehicleId() {
+		return vehicleId;
+	}
+
+	public void setVehicleId(String vehicleId) {
+		this.vehicleId = vehicleId;
+	}
+
+	public String getOwnerId() {
+		return ownerId;
+	}
+
+	public void setOwnerId(String ownerId) {
+		this.ownerId = ownerId;
+	}
+
+	public CargoDetails getCargo() {
+		return cargo;
+	}
+
+	public void setCargo(CargoDetails cargo) {
+		this.cargo = cargo;
+	}
+
+	public LocalDateTime getScheduledPickupDate() {
+		return scheduledPickupDate;
+	}
+
+	public void setScheduledPickupDate(LocalDateTime scheduledPickupDate) {
+		this.scheduledPickupDate = scheduledPickupDate;
+	}
+
+	public LocalDateTime getActualPickupTime() {
+		return actualPickupTime;
+	}
+
+	public void setActualPickupTime(LocalDateTime actualPickupTime) {
+		this.actualPickupTime = actualPickupTime;
+	}
+
+	public LocalDateTime getScheduledDeliveryDate() {
+		return scheduledDeliveryDate;
+	}
+
+	public void setScheduledDeliveryDate(LocalDateTime scheduledDeliveryDate) {
+		this.scheduledDeliveryDate = scheduledDeliveryDate;
+	}
+
+	public String getScheduledDeliveryTime() {
+		return scheduledDeliveryTime;
+	}
+
+	public void setScheduledDeliveryTime(String scheduledDeliveryTime) {
+		this.scheduledDeliveryTime = scheduledDeliveryTime;
+	}
+
+	public LocalDateTime getActualDeliveryTime() {
+		return actualDeliveryTime;
+	}
+
+	public void setActualDeliveryTime(LocalDateTime actualDeliveryTime) {
+		this.actualDeliveryTime = actualDeliveryTime;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getBookingNumber() {
+		return bookingNumber;
+	}
+
+	public void setBookingNumber(String bookingNumber) {
+		this.bookingNumber = bookingNumber;
+	}
+
+	public String getDriverId() {
+		return driverId;
+	}
+
+	public void setDriverId(String driverId) {
+		this.driverId = driverId;
+	}
+
+	public List<String> getCargoPhotos() {
+		return cargoPhotos;
+	}
+
+	public void setCargoPhotos(List<String> cargoPhotos) {
+		this.cargoPhotos = cargoPhotos;
+	}
+
+	public BookingAddress getPickupAddress() {
+		return pickupAddress;
+	}
+
+	public void setPickupAddress(BookingAddress pickupAddress) {
+		this.pickupAddress = pickupAddress;
+	}
+
+	public ContactPerson getPickupContact() {
+		return pickupContact;
+	}
+
+	public void setPickupContact(ContactPerson pickupContact) {
+		this.pickupContact = pickupContact;
+	}
+
+	public String getScheduledPickupTime() {
+		return scheduledPickupTime;
+	}
+
+	public void setScheduledPickupTime(String scheduledPickupTime) {
+		this.scheduledPickupTime = scheduledPickupTime;
+	}
+
+	public String getPickupInstructions() {
+		return pickupInstructions;
+	}
+
+	public void setPickupInstructions(String pickupInstructions) {
+		this.pickupInstructions = pickupInstructions;
+	}
+
+	public BookingAddress getDeliveryAddress() {
+		return deliveryAddress;
+	}
+
+	public void setDeliveryAddress(BookingAddress deliveryAddress) {
+		this.deliveryAddress = deliveryAddress;
+	}
+
+	public ContactPerson getDeliveryContact() {
+		return deliveryContact;
+	}
+
+	public void setDeliveryContact(ContactPerson deliveryContact) {
+		this.deliveryContact = deliveryContact;
+	}
+
+	public String getDeliveryInstructions() {
+		return deliveryInstructions;
+	}
+
+	public void setDeliveryInstructions(String deliveryInstructions) {
+		this.deliveryInstructions = deliveryInstructions;
+	}
+
+	public String getDeliveryPhoto() {
+		return deliveryPhoto;
+	}
+
+	public void setDeliveryPhoto(String deliveryPhoto) {
+		this.deliveryPhoto = deliveryPhoto;
+	}
+
+	public BigDecimal getTotalDistance() {
+		return totalDistance;
+	}
+
+	public void setTotalDistance(BigDecimal totalDistance) {
+		this.totalDistance = totalDistance;
+	}
+
+	public Integer getEstimatedDuration() {
+		return estimatedDuration;
+	}
+
+	public void setEstimatedDuration(Integer estimatedDuration) {
+		this.estimatedDuration = estimatedDuration;
+	}
+
+	public BigDecimal getTollCharges() {
+		return tollCharges;
+	}
+
+	public void setTollCharges(BigDecimal tollCharges) {
+		this.tollCharges = tollCharges;
+	}
+
+	public PricingDetails getPricing() {
+		return pricing;
+	}
+
+	public void setPricing(PricingDetails pricing) {
+		this.pricing = pricing;
+	}
+
+	public PaymentDetails getPayment() {
+		return payment;
+	}
+
+	public void setPayment(PaymentDetails payment) {
+		this.payment = payment;
+	}
+
+	public BookingStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(BookingStatus status) {
+		this.status = status;
+	}
+
+	public Double getCurrentLatitude() {
+		return currentLatitude;
+	}
+
+	public void setCurrentLatitude(Double currentLatitude) {
+		this.currentLatitude = currentLatitude;
+	}
+
+	public Double getCurrentLongitude() {
+		return currentLongitude;
+	}
+
+	public void setCurrentLongitude(Double currentLongitude) {
+		this.currentLongitude = currentLongitude;
+	}
+
+	public String getCurrentAddress() {
+		return currentAddress;
+	}
+
+	public void setCurrentAddress(String currentAddress) {
+		this.currentAddress = currentAddress;
+	}
+
+	public LocalDateTime getLastLocationUpdate() {
+		return lastLocationUpdate;
+	}
+
+	public void setLastLocationUpdate(LocalDateTime lastLocationUpdate) {
+		this.lastLocationUpdate = lastLocationUpdate;
+	}
+
+	public LocalDateTime getEstimatedArrival() {
+		return estimatedArrival;
+	}
+
+	public void setEstimatedArrival(LocalDateTime estimatedArrival) {
+		this.estimatedArrival = estimatedArrival;
+	}
+
+	public List<BookingStatusUpdate> getStatusHistory() {
+		return statusHistory;
+	}
+
+	public void setStatusHistory(List<BookingStatusUpdate> statusHistory) {
+		this.statusHistory = statusHistory;
+	}
+
+	public List<BookingMessage> getCommunications() {
+		return communications;
+	}
+
+	public void setCommunications(List<BookingMessage> communications) {
+		this.communications = communications;
+	}
+
+	public String getCancellationReason() {
+		return cancellationReason;
+	}
+
+	public void setCancellationReason(String cancellationReason) {
+		this.cancellationReason = cancellationReason;
+	}
+
+	public String getCancelledBy() {
+		return cancelledBy;
+	}
+
+	public void setCancelledBy(String cancelledBy) {
+		this.cancelledBy = cancelledBy;
+	}
+
+	public BigDecimal getCancellationFee() {
+		return cancellationFee;
+	}
+
+	public void setCancellationFee(BigDecimal cancellationFee) {
+		this.cancellationFee = cancellationFee;
+	}
+
+	public BigDecimal getRefundAmount() {
+		return refundAmount;
+	}
+
+	public void setRefundAmount(BigDecimal refundAmount) {
+		this.refundAmount = refundAmount;
+	}
+
+	public LocalDateTime getCancelledAt() {
+		return cancelledAt;
+	}
+
+	public void setCancelledAt(LocalDateTime cancelledAt) {
+		this.cancelledAt = cancelledAt;
+	}
+
+	public Boolean getCustomerTermsAccepted() {
+		return customerTermsAccepted;
+	}
+
+	public void setCustomerTermsAccepted(Boolean customerTermsAccepted) {
+		this.customerTermsAccepted = customerTermsAccepted;
+	}
+
+	public LocalDateTime getCustomerTermsAcceptedAt() {
+		return customerTermsAcceptedAt;
+	}
+
+	public void setCustomerTermsAcceptedAt(LocalDateTime customerTermsAcceptedAt) {
+		this.customerTermsAcceptedAt = customerTermsAcceptedAt;
+	}
+
+	public Boolean getOwnerTermsAccepted() {
+		return ownerTermsAccepted;
+	}
+
+	public void setOwnerTermsAccepted(Boolean ownerTermsAccepted) {
+		this.ownerTermsAccepted = ownerTermsAccepted;
+	}
+
+	public LocalDateTime getOwnerTermsAcceptedAt() {
+		return ownerTermsAcceptedAt;
+	}
+
+	public void setOwnerTermsAcceptedAt(LocalDateTime ownerTermsAcceptedAt) {
+		this.ownerTermsAcceptedAt = ownerTermsAcceptedAt;
+	}
+
+	public String getInsuranceProvider() {
+		return insuranceProvider;
+	}
+
+	public void setInsuranceProvider(String insuranceProvider) {
+		this.insuranceProvider = insuranceProvider;
+	}
+
+	public String getInsurancePolicyNumber() {
+		return insurancePolicyNumber;
+	}
+
+	public void setInsurancePolicyNumber(String insurancePolicyNumber) {
+		this.insurancePolicyNumber = insurancePolicyNumber;
+	}
+
+	public BigDecimal getInsuranceCoverageAmount() {
+		return insuranceCoverageAmount;
+	}
+
+	public void setInsuranceCoverageAmount(BigDecimal insuranceCoverageAmount) {
+		this.insuranceCoverageAmount = insuranceCoverageAmount;
+	}
+
+	public BigDecimal getInsurancePremium() {
+		return insurancePremium;
+	}
+
+	public void setInsurancePremium(BigDecimal insurancePremium) {
+		this.insurancePremium = insurancePremium;
+	}
+
+	public Integer getCustomerRating() {
+		return customerRating;
+	}
+
+	public void setCustomerRating(Integer customerRating) {
+		this.customerRating = customerRating;
+	}
+
+	public String getCustomerComment() {
+		return customerComment;
+	}
+
+	public void setCustomerComment(String customerComment) {
+		this.customerComment = customerComment;
+	}
+
+	public Integer getDriverRating() {
+		return driverRating;
+	}
+
+	public void setDriverRating(Integer driverRating) {
+		this.driverRating = driverRating;
+	}
+
+	public String getDriverComment() {
+		return driverComment;
+	}
+
+	public void setDriverComment(String driverComment) {
+		this.driverComment = driverComment;
+	}
+
+	public LocalDateTime getReviewDate() {
+		return reviewDate;
+	}
+
+	public void setReviewDate(LocalDateTime reviewDate) {
+		this.reviewDate = reviewDate;
+	}
+
+	public Boolean getAdminApproved() {
+		return adminApproved;
+	}
+
+	public void setAdminApproved(Boolean adminApproved) {
+		this.adminApproved = adminApproved;
+	}
+
+	public String getApprovedBy() {
+		return approvedBy;
+	}
+
+	public void setApprovedBy(String approvedBy) {
+		this.approvedBy = approvedBy;
+	}
+
+	public LocalDateTime getApprovedAt() {
+		return approvedAt;
+	}
+
+	public void setApprovedAt(LocalDateTime approvedAt) {
+		this.approvedAt = approvedAt;
+	}
+
+	public String getRejectionReason() {
+		return rejectionReason;
+	}
+
+	public void setRejectionReason(String rejectionReason) {
+		this.rejectionReason = rejectionReason;
+	}
+
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
+	}
+
+	public LocalDateTime getUpdatedAt() {
+		return updatedAt;
+	}
+
+	public void setUpdatedAt(LocalDateTime updatedAt) {
+		this.updatedAt = updatedAt;
+	}
+	
+	@Column(name = "booking_notes", length = 2000)
+	private String bookingNotes;
+
+	// NEW FIELDS: Vehicle details for quick reference
+	@Column(name = "vehicle_type", length = 50)
+	private String vehicleType; // 'truck', 'van', 'pickup', 'heavy-truck'
+
+	@Column(name = "vehicle_name", length = 100)
+	private String vehicleName; // 'Small Truck (1-2 Ton)'
+
+	@Column(name = "vehicle_capacity")
+	private Integer vehicleCapacity;
+
+	public String getBookingNotes() {
+		return bookingNotes;
+	}
+
+	public void setBookingNotes(String bookingNotes) {
+		this.bookingNotes = bookingNotes;
+	}
+
+	public String getVehicleType() {
+		return vehicleType;
+	}
+
+	public void setVehicleType(String vehicleType) {
+		this.vehicleType = vehicleType;
+	}
+
+	public String getVehicleName() {
+		return vehicleName;
+	}
+
+	public void setVehicleName(String vehicleName) {
+		this.vehicleName = vehicleName;
+	}
+
+	public Integer getVehicleCapacity() {
+		return vehicleCapacity;
+	}
+
+	public void setVehicleCapacity(Integer vehicleCapacity) {
+		this.vehicleCapacity = vehicleCapacity;
+	}
+	
+	
+    
 }
