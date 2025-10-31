@@ -14,8 +14,8 @@ public class CorsConfig {
         "http://localhost:3000",
         "https://playschool-a2z.netlify.app",
         "http://127.0.0.1:5500",
-        "http://localhost:5500",
-        "https://your-frontend-domain.com"
+        "http://localhost:5500"
+
     };
 
     @Bean
