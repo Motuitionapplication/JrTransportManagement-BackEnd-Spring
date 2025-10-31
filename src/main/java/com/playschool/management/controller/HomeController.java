@@ -19,7 +19,11 @@ public class HomeController {
         response.put("version", "1.0.0");
         response.put("endpoints", Map.of(
             "auth", "/api/auth",
-            "students", "/api/students",
+            "drivers", "/api/drivers",
+            "owners", "/api/owners", 
+            "customers", "/api/customers",
+            "vehicles", "/api/vehicles",
+            "bookings", "/api/bookings",
             "test", "/api/test",
             "user-roles", "/api/user-roles"
         ));

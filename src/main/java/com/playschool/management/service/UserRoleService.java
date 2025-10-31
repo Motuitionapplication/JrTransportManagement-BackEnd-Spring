@@ -26,38 +26,38 @@ public class UserRoleService {
     private RoleRepository roleRepository;
     
     /**
-     * Add a role to a user
+     * Add a role to a user (supports new roles: DRIVER, OWNER, CUSTOMER, ADMIN, SUPER_ADMIN)
      */
     public User addRoleToUser(Long userId, RoleName roleName) {
         Optional<User> userOpt = userRepository.findById(userId);
         Optional<Role> roleOpt = roleRepository.findByName(roleName);
-        
+
         if (userOpt.isPresent() && roleOpt.isPresent()) {
             User user = userOpt.get();
             Role role = roleOpt.get();
-            
+
             user.getRoles().add(role);
             return userRepository.save(user);
         }
-        
+
         throw new RuntimeException("User or Role not found");
     }
     
     /**
-     * Remove a role from a user
+     * Remove a role from a user (supports new roles)
      */
     public User removeRoleFromUser(Long userId, RoleName roleName) {
         Optional<User> userOpt = userRepository.findById(userId);
         Optional<Role> roleOpt = roleRepository.findByName(roleName);
-        
+
         if (userOpt.isPresent() && roleOpt.isPresent()) {
             User user = userOpt.get();
             Role role = roleOpt.get();
-            
+
             user.getRoles().remove(role);
             return userRepository.save(user);
         }
-        
+
         throw new RuntimeException("User or Role not found");
     }
     
