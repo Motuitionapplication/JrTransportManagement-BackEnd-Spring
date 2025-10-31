@@ -14,6 +14,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,6 +38,8 @@ import com.playschool.management.dto.dashboard.DriverMessageSummaryDto;
 import com.playschool.management.dto.dashboard.DriverTripSummaryDto;
 import com.playschool.management.dto.request.AssignVehicleRequestDTO;
 import com.playschool.management.dto.request.MinimalDriverRequestDTO;
+import com.playschool.management.dto.response.DriverAvatarResponse;
+import com.playschool.management.dto.response.DriverProfileSummaryDto;
 import com.playschool.management.entity.Driver;
 import com.playschool.management.service.DriverService;
 
@@ -162,6 +166,20 @@ public class DriverController {
         Optional<Driver> driver = driverService.findByUserId(userId);
         return driver.map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get logged-in driver profile", description = "Returns minimal profile information for the authenticated driver")
+    public ResponseEntity<DriverProfileSummaryDto> getCurrentDriver(Authentication authentication) {
+        if (authentication == null || !StringUtils.hasText(authentication.getName())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return driverService
+                .getProfileSummaryForPrincipal(authentication.getName())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/profile/email/{email}")
@@ -418,11 +436,11 @@ public class DriverController {
     @PreAuthorize("hasRole('DRIVER')")
     @PostMapping("/{id}/upload-photo")
     @Operation(summary = "Upload driver profile photo", description = "Uploads an image and updates driver's profilePhoto url")
-    public ResponseEntity<String> uploadDriverPhoto(
+    public ResponseEntity<DriverAvatarResponse> uploadDriverPhoto(
             @PathVariable("id") String id,
             @RequestParam("file") MultipartFile file) {
-        String url = driverService.uploadProfilePhoto(id, file);
-        return ResponseEntity.ok(url);
+        DriverAvatarResponse response = driverService.uploadProfilePhoto(id, file);
+        return ResponseEntity.ok(response);
     }
 
     // Status update endpoints
