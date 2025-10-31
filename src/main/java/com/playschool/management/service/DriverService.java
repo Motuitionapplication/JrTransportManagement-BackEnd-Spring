@@ -1,18 +1,19 @@
 package com.playschool.management.service;
 
-import java.math.BigDecimal;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.Base64;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,15 +30,19 @@ import com.playschool.management.dto.dashboard.DriverChartDataDto;
 import com.playschool.management.dto.dashboard.DriverDashboardStatsDto;
 import com.playschool.management.dto.dashboard.DriverMessageSummaryDto;
 import com.playschool.management.dto.dashboard.DriverTripSummaryDto;
+import com.playschool.management.dto.request.MinimalDriverRequestDTO;
+import com.playschool.management.dto.response.DriverAvatarResponse;
+import com.playschool.management.dto.response.DriverProfileSummaryDto;
 import com.playschool.management.entity.AssignmentHistory;
 import com.playschool.management.entity.Booking;
 import com.playschool.management.entity.Driver;
 import com.playschool.management.entity.Vehicle;
-import com.playschool.management.dto.request.MinimalDriverRequestDTO;
+import com.playschool.management.entity.User;
 import com.playschool.management.repository.AssignmentHistoryRepository;
 import com.playschool.management.repository.BookingRepository;
 import com.playschool.management.repository.DriverRepository;
 import com.playschool.management.repository.VehicleRepository;
+import com.playschool.management.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.util.StringUtils;
@@ -52,14 +57,17 @@ public class DriverService {
     private final VehicleRepository vehicleRepository;
     private final AssignmentHistoryRepository assignmentHistoryRepository;
     private final BookingRepository bookingRepository;
+    private final UserRepository userRepository;
     
     @Autowired
     public DriverService(DriverRepository driverRepository, VehicleRepository vehicleRepository,
-            AssignmentHistoryRepository assignmentHistoryRepository, BookingRepository bookingRepository) { 
+            AssignmentHistoryRepository assignmentHistoryRepository, BookingRepository bookingRepository,
+            UserRepository userRepository) { 
         this.driverRepository = driverRepository;
         this.vehicleRepository = vehicleRepository; 
         this.assignmentHistoryRepository = assignmentHistoryRepository;
         this.bookingRepository = bookingRepository;
+        this.userRepository = userRepository;
     }
     public enum DriverStatus { AVAILABLE, ON_TRIP, OFF_DUTY, BREAK }
 
@@ -205,6 +213,56 @@ public class DriverService {
     @Transactional(readOnly = true)
     public Optional<Driver> findByEmail(String email) {
         return driverRepository.findByEmail(email);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<DriverProfileSummaryDto> getProfileSummaryForPrincipal(String username) {
+        if (!StringUtils.hasText(username)) {
+            return Optional.empty();
+        }
+
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            log.warn("No user found for username={} while resolving driver profile summary", username);
+            return Optional.empty();
+        }
+
+        User user = userOpt.get();
+        String userId = user.getId() != null ? String.valueOf(user.getId()) : null;
+
+        Optional<Driver> driverOpt = Optional.empty();
+        if (StringUtils.hasText(userId)) {
+            driverOpt = driverRepository.findByUserId(userId);
+        }
+        if (driverOpt.isEmpty()) {
+            driverOpt = driverRepository.findByEmail(user.getEmail());
+        }
+
+        if (driverOpt.isEmpty()) {
+            log.warn("No driver record tied to userId/email for username={}", username);
+            return Optional.empty();
+        }
+
+        Driver driver = driverOpt.get();
+        String role = user.getRoles().stream()
+                .map(roleEntity -> roleEntity.getName())
+                .filter(Objects::nonNull)
+                .map(Enum::name)
+                .findFirst()
+                .orElse("ROLE_DRIVER");
+
+        String avatarUrl = StringUtils.hasText(driver.getProfilePhoto()) ? driver.getProfilePhoto() : null;
+
+        DriverProfileSummaryDto summary = new DriverProfileSummaryDto(
+                driver.getId(),
+                driver.getUserId(),
+                driver.getFirstName(),
+                driver.getLastName(),
+                role,
+                user.getEmail(),
+                avatarUrl);
+
+        return Optional.of(summary);
     }
 
     @Transactional(readOnly = true)
@@ -736,7 +794,7 @@ public class DriverService {
      * Accepts an image file, validates size/type, stores as data URL in profilePhoto, and returns the URL.
      */
     @Transactional
-    public String uploadProfilePhoto(String driverId, MultipartFile file) {
+    public DriverAvatarResponse uploadProfilePhoto(String driverId, MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("File is required");
         }
@@ -760,7 +818,7 @@ public class DriverService {
             driver.setProfilePhoto(dataUrl);
             driverRepository.save(driver);
             log.info("Updated profile photo for driver {} ({} bytes)", driverId, file.getSize());
-            return dataUrl;
+            return new DriverAvatarResponse(dataUrl);
         } catch (IOException e) {
             throw new RuntimeException("Failed to process uploaded image", e);
         }
