@@ -2,10 +2,27 @@
     "configurations": [
         {
             "type": "java",
+            "name": "JrTransportManagementApplication",
+            "request": "launch",
+            "mainClass": "com.playschool.management.JrTransportManagementApplication",
+            "projectName": "management-backend"
+        },
+        {
+            "type": "java",
             "name": "Spring Boot-PlaySchoolManagementApplication<management-backend>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "mainClass": "com.playschool.management.PlaySchoolManagementApplication",
+            "projectName": "management-backend",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-JrTransportManagementApplication<management-backend>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.playschool.management.JrTransportManagementApplication",
             "projectName": "management-backend",
             "args": "",
             "envFile": "${workspaceFolder}/.env"

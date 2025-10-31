@@ -12,6 +12,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.playschool.management.dto.CustomerCreateDto;
 import com.playschool.management.dto.request.LoginRequest;
 import com.playschool.management.dto.request.SignupRequest;
 import com.playschool.management.dto.response.JwtResponse;
@@ -29,8 +31,11 @@ import com.playschool.management.entity.RoleName;
 import com.playschool.management.entity.User;
 import com.playschool.management.repository.RoleRepository;
 import com.playschool.management.repository.UserRepository;
+import com.playschool.management.repository.VehicleOwnerRepository;
+import com.playschool.management.repository.VehicleRepository;
 import com.playschool.management.security.jwt.JwtUtils;
 import com.playschool.management.security.services.UserPrincipal;
+import com.playschool.management.service.CustomerService;
 
 import jakarta.validation.Valid;
 
@@ -44,6 +49,11 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+    @Autowired
+    com.playschool.management.repository.CustomerRepository customerRepository;
+
+    @Autowired
+    com.playschool.management.repository.AdminRepository adminRepository;
     
     @Autowired
     AuthenticationManager authenticationManager;
@@ -58,7 +68,16 @@ public class AuthController {
     PasswordEncoder encoder;
     
     @Autowired
+    CustomerService customerservice;
+    
+    @Autowired
     JwtUtils jwtUtils;
+    
+    @Autowired
+    VehicleRepository vehicleRepository;
+    
+    @Autowired
+    VehicleOwnerRepository vehicleOwnerRepository;
     
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -82,67 +101,128 @@ public class AuthController {
                 userDetails.getLastName(),
                 roles));
     }
-    
+    @Transactional
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-        if (userRepository.existsByUsername(signUpRequest.getUsername())) {
+           
+            if (userRepository.existsByUsername(signUpRequest.getUsername())) {
             return ResponseEntity
                     .badRequest()
                     .body(new MessageResponse("Error: Username is already taken!"));
         }
-        
+
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             return ResponseEntity
                     .badRequest()
                     .body(new MessageResponse("Error: Email is already in use!"));
         }
-        
+
         // Create new user's account
         User user = new User(signUpRequest.getUsername(),
                            signUpRequest.getEmail(),
                            encoder.encode(signUpRequest.getPassword()),
                            signUpRequest.getFirstName(),
                            signUpRequest.getLastName());
-        
+
         user.setPhoneNumber(signUpRequest.getPhoneNumber());
-        
+
         Set<String> strRoles = signUpRequest.getRole();
         Set<Role> roles = new HashSet<>();
-        
+
         if (strRoles == null) {
-            Role userRole = roleRepository.findByName(RoleName.ROLE_PARENT)
+            Role defaultRole = roleRepository.findByName(RoleName.ROLE_CUSTOMER)
                     .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-            roles.add(userRole);
+            roles.add(defaultRole);
         } else {
             strRoles.forEach(role -> {
                 switch (role) {
-                    case "admin" -> {
+                    case "ROLE_ADMIN" -> {
                         Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                         roles.add(adminRole);
                     }
-                    case "teacher" -> {
-                        Role teacherRole = roleRepository.findByName(RoleName.ROLE_TEACHER)
+                    case "ROLE_SUPER_ADMIN" -> {
+                        Role superAdminRole = roleRepository.findByName(RoleName.ROLE_SUPER_ADMIN)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(teacherRole);
+                        roles.add(superAdminRole);
                     }
-                    case "staff" -> {
-                        Role staffRole = roleRepository.findByName(RoleName.ROLE_STAFF)
+                    case "ROLE_DRIVER" -> {
+                        Role driverRole = roleRepository.findByName(RoleName.ROLE_DRIVER)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(staffRole);
+                        roles.add(driverRole);
+                    }
+                    case "ROLE_OWNER" -> {
+                        Role ownerRole = roleRepository.findByName(RoleName.ROLE_OWNER)
+                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                        roles.add(ownerRole);
+                    }
+                    case "ROLE_CUSTOMER" -> {
+                        Role customerRole = roleRepository.findByName(RoleName.ROLE_CUSTOMER)
+                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                        roles.add(customerRole);
                     }
                     default -> {
-                        Role userRole = roleRepository.findByName(RoleName.ROLE_PARENT)
+                        Role defaultRole = roleRepository.findByName(RoleName.ROLE_CUSTOMER)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(userRole);
+                        roles.add(defaultRole);
                     }
                 }
             });
         }
-        
+
         user.setRoles(roles);
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        // If user is admin, create entry in admin table
+        boolean isAdmin = roles.stream().anyMatch(r -> r.getName() == RoleName.ROLE_ADMIN);
+        if (isAdmin) {
+            com.playschool.management.entity.Admin admin = new com.playschool.management.entity.Admin();
+            admin.setUserId(savedUser.getId());
+            admin.setEmail(savedUser.getEmail());
+            admin.setFirstName(savedUser.getFirstName());
+            admin.setLastName(savedUser.getLastName());
+            admin.setPhoneNumber(savedUser.getPhoneNumber());
+            adminRepository.save(admin);
+        }
+
+        // If user is customer, create entry in customer table
+        boolean isCustomer = roles.stream().anyMatch(r -> r.getName() == RoleName.ROLE_CUSTOMER);
+        if (isCustomer) {
+            CustomerCreateDto customerDto = new CustomerCreateDto();
+            customerDto.setUserId(String.valueOf(savedUser.getId()));  // store FK link to users table
+            customerDto.setFirstName(savedUser.getFirstName());
+            customerDto.setLastName(savedUser.getLastName());
+            customerDto.setEmail(savedUser.getEmail());
+            customerDto.setPhoneNumber(savedUser.getPhoneNumber());
+            customerDto.setPassword(signUpRequest.getPassword()); // ⚠️ raw password, will be encoded inside service
+
+            customerservice.addCustomer(customerDto);
+        }
         
+        // If user is owner, create entry in vehicle table and vehicle_owner map table
+        boolean isOwner = roles.stream().anyMatch(r -> r.getName() == RoleName.ROLE_OWNER);
+        if (isOwner) {
+            // Create Vehicle
+            com.playschool.management.entity.Vehicle vehicle = new com.playschool.management.entity.Vehicle();
+            vehicle.setVehicleNumber(signUpRequest.getVehicleNumber());
+            // Set other vehicle fields if needed
+            com.playschool.management.entity.Vehicle savedVehicle = vehicleRepository.save(vehicle);
+            
+            
+            // Create VehicleOwner mapping
+            com.playschool.management.entity.VehicleOwner vehicleOwner = new com.playschool.management.entity.VehicleOwner();
+            vehicleOwner.setOwnerId(String.valueOf(savedUser.getId()));
+            vehicleOwner.setEmail(savedUser.getEmail());
+            vehicleOwner.setPhoneNumber(savedUser.getPhoneNumber());
+            vehicleOwner.getVehicles().add(savedVehicle);
+            vehicleOwner.setFirstName(savedUser.getFirstName());
+            vehicleOwner.setLastName(savedUser.getLastName());
+            vehicleOwner.setUserId(String.valueOf(savedUser.getId()));
+
+            // Set other owner fields if needed
+            vehicleOwnerRepository.save(vehicleOwner);
+        }
+
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
     
@@ -160,21 +240,24 @@ public class AuthController {
                 return ResponseEntity.badRequest()
                     .body(new MessageResponse("Admin user already exists!"));
             }
-            
+
             // Create admin user
-            User adminUser = new User("admin", 
-                                    "admin@playschool.com", 
-                                    encoder.encode("admin123"), 
-                                    "Admin", 
+            User adminUser = new User("admin",
+                                    "admin@playschool.com",
+                                    encoder.encode("admin123"),
+                                    "Admin",
                                     "User");
-            
+
             adminUser.setPhoneNumber("1234567890");
-            
+
             Set<Role> roles = new HashSet<>();
             Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
                     .orElseThrow(() -> new RuntimeException("Error: Admin role not found."));
+            Role superAdminRole = roleRepository.findByName(RoleName.ROLE_SUPER_ADMIN)
+                    .orElseThrow(() -> new RuntimeException("Error: Super Admin role not found."));
             roles.add(adminRole);
-            
+            roles.add(superAdminRole);
+
             adminUser.setRoles(roles);
             userRepository.save(adminUser);
             

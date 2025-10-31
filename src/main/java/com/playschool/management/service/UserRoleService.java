@@ -1,18 +1,19 @@
 package com.playschool.management.service;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.playschool.management.entity.Role;
 import com.playschool.management.entity.RoleName;
 import com.playschool.management.entity.User;
 import com.playschool.management.repository.RoleRepository;
 import com.playschool.management.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
 @Service
 @Transactional

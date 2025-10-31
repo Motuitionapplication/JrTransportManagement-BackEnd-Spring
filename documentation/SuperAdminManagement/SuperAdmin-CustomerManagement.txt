@@ -1,0 +1,55 @@
+Super Admin – Customer Management Features
+
+Phrase 1:
+
+1. Customer List & Search
+View all registered customers in a paginated, searchable, and sortable table.
+Filter customers by status (active, inactive, blocked), city, registration date, etc.
+2. Customer Profile Management
+View full customer profile (personal details, contact info, KYC/identity docs).
+Edit customer details (name, phone, email, address, etc.).
+Add new customer (manual registration by admin).
+Remove (delete) customer.
+Block/unblock customer account.
+Reset customer password.
+3. Wallet & Payment Management
+
+
+
+View customer wallet balance and transaction history.
+Add or deduct funds from customer wallet (with reason).
+View/download payment status/history.
+View UPI/phone pay number and linked payment methods.
+4. Consignment & Transport History
+View all consignments placed by the customer.
+See and download goods transport history.
+View and download payment status/history for each consignment.
+View uploaded consignment photos and waybills.
+5. Vehicle & Driver Tracking
+View all vehicles assigned to the customer’s consignments.
+Track vehicle location in real-time (if tracking enabled).
+View driver details for each consignment.
+6. Owner & Route Details
+View owner details for each consignment.
+See owner’s location after payment confirmation.
+View route and transit details for each consignment.
+7. Complaints & Reviews
+View all complaints/reviews submitted by the customer.
+Respond to or resolve complaints.
+See WhatsApp complaint integration status.
+8. Terms & Conditions
+View the terms and conditions accepted by the customer.
+Update or resend terms if needed.
+9. Admin Actions & Audit
+View audit log of all actions taken on the customer account (edits, blocks, wallet changes, etc.).
+Download reports (CSV, PDF) for customer activity, payments, consignments, etc.
+10. Advanced Filters & Analytics
+Filter customers by activity, payment volume, complaint count, etc.
+View analytics: top customers, frequent complaints, payment delays, etc.
+Optional Advanced Features
+Bulk Actions: Block/unblock, export, or message multiple customers at once.
+Notification Management: Send notifications (SMS, email, push) to customers.
+KYC Verification: Approve/reject customer identity documents.
+Custom Fields: Add notes or tags to customer profiles for internal tracking.
+Summary:
+As a super admin, you should be able to fully manage, monitor, and support all customer-related activities, including profile management, payments, consignments, tracking, complaints, and analytics. This ensures you have complete control and visibility over customer operations in your system.
