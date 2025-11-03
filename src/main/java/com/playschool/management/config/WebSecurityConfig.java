@@ -79,21 +79,29 @@ public class WebSecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth ->
                 auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                    // 👇 Add your public endpoints here
-                .requestMatchers("/ws/**", "/sockjs-ws/**").permitAll()
+                    // 👇 Public endpoints
+                    .requestMatchers("/", "/actuator/health", "/error").permitAll()
+                    .requestMatchers("/ws/**", "/sockjs-ws/**").permitAll()
                     .requestMatchers("/test-broadcast").permitAll()
                     .requestMatchers("/api/location/**").permitAll()
 
                     // Existing public APIs
                     .requestMatchers("/api/auth/**").permitAll()
-                    .requestMatchers("/api/admin/**").permitAll()
+                    // Admin must be protected
+                    .requestMatchers("/api/admin/**").hasRole("ADMIN")
                     .requestMatchers("/api/customers/**").permitAll()
                     .requestMatchers("/api/payments/**").permitAll()
                     .requestMatchers("/api/transport/drivers/**").permitAll()
                     .requestMatchers("/api/vehicles/**").permitAll()
                     .requestMatchers("/api/vehicle-owners/**").permitAll()
                     .requestMatchers("/api/settings/**").authenticated() 
-                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
+                    .requestMatchers(
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/v3/api-docs/**",
+                        "/swagger-resources/**",
+                        "/webjars/**"
+                    ).permitAll()
                     // 👇 Everything else still requires JWT
                     .anyRequest().authenticated()
             );
@@ -124,6 +132,8 @@ public class WebSecurityConfig {
         configuration.setAllowedOrigins(filteredOrigins); // ✅ Use exact origins
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
+    // allow clients to access auth headers such as JWT in responses if needed
+    configuration.setExposedHeaders(Arrays.asList("Authorization"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L); // Cache preflight requests for 1 hour
 
