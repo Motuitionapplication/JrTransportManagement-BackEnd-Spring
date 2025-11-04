@@ -30,10 +30,10 @@ public class CorsFilter implements Filter {
         
         // Always set CORS headers for allowed origins
         if (origin != null && (
-                origin.equals("https://playschool-a2z.netlify.app") ||
+                origin.equals("https://deploy-preview-77--jr-transport.netlify.app") ||
                 origin.equals("http://localhost:3000") ||
                 origin.equals("http://localhost:4200") ||
-                origin.startsWith("https://playschool-a2z") // Handle different Netlify subdomain patterns
+                origin.startsWith("https://deploy-preview-77--jr-transport") // Handle different Netlify subdomain patterns
         )) {
             response.setHeader("Access-Control-Allow-Origin", origin);
             response.setHeader("Access-Control-Allow-Credentials", "true");

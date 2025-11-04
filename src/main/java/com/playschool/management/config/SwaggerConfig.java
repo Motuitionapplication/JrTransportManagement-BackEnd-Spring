@@ -24,7 +24,7 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .servers(List.of(
                     new Server().url("http://localhost:8080").description("Development Server"),
-                    new Server().url("https://your-production-domain.com").description("Production Server")
+                    new Server().url("https://jrtransportmanagement-backend-spring.onrender.com").description("Production Server")
                 ))
                 .info(new Info()
                         .title("Jr Transport Management API")

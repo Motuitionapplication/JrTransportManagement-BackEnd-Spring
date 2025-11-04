@@ -48,7 +48,7 @@ public class WebSecurityConfig {
         this.authenticationJwtTokenFilter = authenticationJwtTokenFilter;
     }
 
-    @Value("${cors.allowed-origins:http://localhost:4200,http://localhost:3000,https://jr-transport.netlify.app}")
+    @Value("${cors.allowed-origins:http://localhost:4200,http://localhost:3000,https://deploy-preview-77--jr-transport.netlify.app,https://jrtransportmanagement-backend-spring.onrender.com}")
     private String allowedOrigins;
 
     @Bean
@@ -93,7 +93,7 @@ public class WebSecurityConfig {
                     .requestMatchers("/api/vehicles/**").permitAll()
                     .requestMatchers("/api/vehicle-owners/**").permitAll()
                     .requestMatchers("/api/settings/**").authenticated() 
-                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
+                    .requestMatchers("/swagger-ui/**","/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                     // 👇 Everything else still requires JWT
                     .anyRequest().authenticated()
             );

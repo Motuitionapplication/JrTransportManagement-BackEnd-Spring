@@ -12,9 +12,10 @@ public class CorsConfig {
     private static final String[] ALLOWED_ORIGINS = {
         "http://localhost:4200",
         "http://localhost:3000",
-        "https://playschool-a2z.netlify.app",
+        "https://deploy-preview-77--jr-transport.netlify.app",
         "http://127.0.0.1:5500",
-        "http://localhost:5500"
+        "http://localhost:5500",
+        "https://jrtransportmanagement-backend-spring.onrender.com",
 
     };
 
