@@ -12,6 +12,7 @@ public class CorsConfig {
     private static final String[] ALLOWED_ORIGINS = {
         "http://localhost:4200",
         "http://localhost:3000",
+        "https://jr-transport.netlify.app",
         "https://deploy-preview-77--jr-transport.netlify.app",
         "http://127.0.0.1:5500",
         "http://localhost:5500",

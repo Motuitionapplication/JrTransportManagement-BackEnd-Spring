@@ -30,6 +30,7 @@ public class CorsFilter implements Filter {
         
         // Always set CORS headers for allowed origins
         if (origin != null && (
+        		origin.equals("https://jr-transport.netlify.app") ||
                 origin.equals("https://deploy-preview-77--jr-transport.netlify.app") ||
                 origin.equals("http://localhost:3000") ||
                 origin.equals("http://localhost:4200") ||

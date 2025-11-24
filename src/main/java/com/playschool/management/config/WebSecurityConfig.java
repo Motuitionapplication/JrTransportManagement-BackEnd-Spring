@@ -48,7 +48,7 @@ public class WebSecurityConfig {
         this.authenticationJwtTokenFilter = authenticationJwtTokenFilter;
     }
 
-    @Value("${cors.allowed-origins:http://localhost:4200,http://localhost:3000,https://deploy-preview-77--jr-transport.netlify.app,https://jrtransportmanagement-backend-spring.onrender.com}")
+    @Value("${cors.allowed-origins:http://localhost:4200,http://localhost:3000,https://deploy-preview-77--jr-transport.netlify.app,https://jrtransportmanagement-backend-spring.onrender.com,https://jr-transport.netlify.app}")
     private String allowedOrigins;
 
     @Bean
