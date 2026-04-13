@@ -1,6 +1,6 @@
-# PlaySchool Management Backend
+# Jr Transport Management Backend
 
-A comprehensive Spring Boot backend application for managing play school operations including student management, user authentication, and role-based access control.
+A comprehensive Spring Boot backend application for managing transport operations including vehicle management, driver management, booking system, and role-based access control.
 
 ## Features
 
@@ -27,7 +27,7 @@ A comprehensive Spring Boot backend application for managing play school operati
 ```
 src/
 ├── main/
-│   ├── java/com/playschool/management/
+│   ├── java/com/transport/management/
 │   │   ├── config/          # Configuration classes
 │   │   ├── controller/      # REST controllers
 │   │   ├── dto/            # Data Transfer Objects
@@ -80,7 +80,7 @@ src/
 
    ```bash
    git clone <repository-url>
-   cd PlaySchoolManagementBackend
+   cd JrTransportManagementBackend
    ```
 
 2. **Configure Database**
@@ -88,7 +88,7 @@ src/
    **For MySQL** (update `src/main/resources/application.properties`):
 
    ```properties
-   spring.datasource.url=jdbc:mysql://localhost:3306/playschool_db
+   spring.datasource.url=jdbc:mysql://localhost:3306/transport_db
    spring.datasource.username=your_username
    spring.datasource.password=your_password
    ```
@@ -98,7 +98,7 @@ src/
    ```properties
    spring.profiles.active=postgresql
    # OR
-   spring.datasource.url=jdbc:postgresql://localhost:5432/playschool_db
+   spring.datasource.url=jdbc:postgresql://localhost:5432/transport_db
    spring.datasource.username=postgres
    spring.datasource.password=your_password
    ```
@@ -108,13 +108,13 @@ src/
    **For MySQL:**
 
    ```sql
-   CREATE DATABASE playschool_db;
+   CREATE DATABASE transport_db;
    ```
 
    **For PostgreSQL:**
 
    ```sql
-   CREATE DATABASE playschool_db;
+   CREATE DATABASE transport_db;
    # Connect: psql -U postgres
    ```
 
@@ -206,4 +206,4 @@ The application uses JWT tokens for authentication. To access protected endpoint
 
 # This project is licensed under the MIT License.
 
-# PlaySchoolManagementBackend
+# JrTransportManagementBackend

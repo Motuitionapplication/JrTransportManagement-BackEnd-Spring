@@ -1,5 +1,5 @@
 @echo off
-echo Starting PlaySchool Management Backend in Local Development Mode...
+echo Starting JR Transport Management Backend in Local Development Mode...
 echo.
 echo Environment: LOCAL
 echo Database: Cloud PostgreSQL (shared for dev/prod)

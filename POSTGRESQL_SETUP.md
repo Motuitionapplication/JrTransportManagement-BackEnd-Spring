@@ -7,28 +7,33 @@ This project now supports both MySQL and PostgreSQL databases. Use the appropria
 ## Available Configuration Files
 
 ### 1. MySQL Configuration (Default)
+
 - **File**: `application.properties`
 - **Usage**: Default configuration, uses MySQL
-- **Database**: `playschool_db`
+- **Database**: `transport_db`
 
 ### 2. PostgreSQL Configuration
+
 - **File**: `application-postgresql.properties`
 - **Usage**: For PostgreSQL database
-- **Database**: `playschool_db`
+- **Database**: `transport_db`
 
 ### 3. Development with PostgreSQL
+
 - **File**: `application-dev.properties`
 - **Usage**: Development environment with PostgreSQL
-- **Database**: `playschool_dev_db`
+- **Database**: `transport_dev_db`
 
 ### 4. Production with PostgreSQL
+
 - **File**: `application-prod.properties`
 - **Usage**: Production environment with PostgreSQL
-- **Database**: `playschool_prod_db`
+- **Database**: `transport_prod_db`
 
 ## PostgreSQL Setup Instructions
 
 ### Step 1: Install PostgreSQL
+
 ```bash
 # Windows (using Chocolatey)
 choco install postgresql
@@ -37,26 +42,29 @@ choco install postgresql
 ```
 
 ### Step 2: Create Database
+
 ```sql
 -- Connect to PostgreSQL as superuser
 psql -U postgres
 
 -- Create database
-CREATE DATABASE playschool_db;
+CREATE DATABASE transport_db;
 
 -- For development
-CREATE DATABASE playschool_dev_db;
+CREATE DATABASE transport_dev_db;
 
 -- For production
-CREATE DATABASE playschool_prod_db;
+CREATE DATABASE transport_prod_db;
 
 -- Create user (optional)
-CREATE USER playschool_user WITH PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE playschool_db TO playschool_user;
+CREATE USER transport_user WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE transport_db TO transport_user;
 ```
 
 ### Step 3: Update Configuration
+
 Update the password in your chosen properties file:
+
 ```properties
 spring.datasource.password=your_actual_password
 ```
@@ -64,6 +72,7 @@ spring.datasource.password=your_actual_password
 ## Running with Different Profiles
 
 ### Option 1: Using Spring Profiles
+
 ```bash
 # Run with PostgreSQL profile
 mvn spring-boot:run -Dspring-boot.run.profiles=postgresql
@@ -76,13 +85,16 @@ mvn spring-boot:run -Dspring-boot.run.profiles=prod
 ```
 
 ### Option 2: Using Specific Properties File
+
 ```bash
 # Run with specific config file
 mvn spring-boot:run -Dspring.config.location=classpath:/application-postgresql.properties
 ```
 
 ### Option 3: Set Active Profile in application.properties
+
 Add this line to your main `application.properties`:
+
 ```properties
 spring.profiles.active=postgresql
 ```
@@ -90,21 +102,24 @@ spring.profiles.active=postgresql
 ## Configuration Differences
 
 ### MySQL vs PostgreSQL
-| Feature | MySQL | PostgreSQL |
-|---------|--------|------------|
-| **Driver** | `com.mysql.cj.jdbc.Driver` | `org.postgresql.Driver` |
-| **URL Format** | `jdbc:mysql://localhost:3306/db` | `jdbc:postgresql://localhost:5432/db` |
-| **Dialect** | `MySQL8Dialect` | `PostgreSQLDialect` |
-| **Default Port** | 3306 | 5432 |
+
+| Feature          | MySQL                            | PostgreSQL                            |
+| ---------------- | -------------------------------- | ------------------------------------- |
+| **Driver**       | `com.mysql.cj.jdbc.Driver`       | `org.postgresql.Driver`               |
+| **URL Format**   | `jdbc:mysql://localhost:3306/db` | `jdbc:postgresql://localhost:5432/db` |
+| **Dialect**      | `MySQL8Dialect`                  | `PostgreSQLDialect`                   |
+| **Default Port** | 3306                             | 5432                                  |
 
 ### Environment-Specific Settings
 
 #### Development
+
 - `ddl-auto=create-drop` (recreates schema)
 - `show-sql=true` (shows SQL queries)
 - More verbose logging
 
 #### Production
+
 - `ddl-auto=validate` (validates schema)
 - `show-sql=false` (no SQL logging)
 - Environment variables for sensitive data
@@ -113,6 +128,7 @@ spring.profiles.active=postgresql
 ## Testing the Connection
 
 ### 1. Start PostgreSQL Service
+
 ```bash
 # Windows
 net start postgresql-x64-13
@@ -121,11 +137,13 @@ net start postgresql-x64-13
 ```
 
 ### 2. Verify Connection
+
 ```bash
-psql -U postgres -d playschool_db
+psql -U postgres -d transport_db
 ```
 
 ### 3. Run the Application
+
 ```bash
 # With PostgreSQL profile
 mvn spring-boot:run -Dspring.profiles.active=postgresql
@@ -148,6 +166,7 @@ mvn spring-boot:run -Dspring.profiles.active=postgresql
    - Or set `createDatabaseIfNotExist=true` in URL (not supported in PostgreSQL)
 
 ### Environment Variables (Production)
+
 ```bash
 export DB_USERNAME=your_username
 export DB_PASSWORD=your_password

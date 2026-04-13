@@ -2,7 +2,7 @@
 version: 1
 services:
   - type: web
-    name: playschool-backend
+    name: transport-backend
     env: java
     buildCommand: mvn clean package -DskipTests -q
     startCommand: java -Xmx512m -Dspring.profiles.active=cloud -Dserver.port=$PORT -Djava.security.egd=file:/dev/./urandom -jar target/management-backend-0.0.1-SNAPSHOT.jar
@@ -12,11 +12,11 @@ services:
         value: cloud
       - key: DATABASE_URL
         fromDatabase:
-          name: playschool-db
+          name: transport-db
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRATION
         value: 86400000
       - key: CORS_ALLOWED_ORIGINS
-        value: https://playschool-a2z.netlify.app,http://localhost:3000,http://localhost:4200
+        value: https://jr-transport-management.netlify.app,http://localhost:3000,http://localhost:4200

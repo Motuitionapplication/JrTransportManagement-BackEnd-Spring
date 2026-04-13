@@ -1,6 +1,7 @@
-# 🔐 Authentication Guide for PlaySchool Management API
+# 🔐 Authentication Guide for JR Transport Management API
 
 ## 🚨 The Issue
+
 You're getting a 401 Unauthorized error because the `/api/students` endpoint requires authentication.
 
 ## 🧪 **Test Endpoints (No Authentication Required)**
@@ -8,6 +9,7 @@ You're getting a 401 Unauthorized error because the `/api/students` endpoint req
 Try these public endpoints first to verify your API is working:
 
 ### **1. Public Student Endpoints:**
+
 ```bash
 # Test student API
 GET https://playschoolmanagementbackend.onrender.com/api/students/public/test
@@ -17,6 +19,7 @@ GET https://playschoolmanagementbackend.onrender.com/api/students/public/count
 ```
 
 ### **2. Home Endpoints:**
+
 ```bash
 # API welcome
 GET https://playschoolmanagementbackend.onrender.com/api/home/
@@ -26,6 +29,7 @@ GET https://playschoolmanagementbackend.onrender.com/api/home/health
 ```
 
 ### **3. Test Endpoints:**
+
 ```bash
 # Public content
 GET https://playschoolmanagementbackend.onrender.com/api/test/all
@@ -34,6 +38,7 @@ GET https://playschoolmanagementbackend.onrender.com/api/test/all
 ## 🔑 **How to Authenticate (For Protected Endpoints)**
 
 ### **Step 1: Create an Admin User**
+
 ```bash
 curl -X POST https://playschoolmanagementbackend.onrender.com/api/auth/signup \
   -H "Content-Type: application/json" \
@@ -48,6 +53,7 @@ curl -X POST https://playschoolmanagementbackend.onrender.com/api/auth/signup \
 ```
 
 ### **Step 2: Login to Get JWT Token**
+
 ```bash
 curl -X POST https://playschoolmanagementbackend.onrender.com/api/auth/signin \
   -H "Content-Type: application/json" \
@@ -58,6 +64,7 @@ curl -X POST https://playschoolmanagementbackend.onrender.com/api/auth/signin \
 ```
 
 **Response:**
+
 ```json
 {
   "token": "eyJhbGciOiJIUzUxMiJ9...",
@@ -72,6 +79,7 @@ curl -X POST https://playschoolmanagementbackend.onrender.com/api/auth/signin \
 ```
 
 ### **Step 3: Use Token in Headers**
+
 ```bash
 curl -X GET https://playschoolmanagementbackend.onrender.com/api/students \
   -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
@@ -81,28 +89,34 @@ curl -X GET https://playschoolmanagementbackend.onrender.com/api/students \
 
 ```javascript
 // 1. Login
-const loginResponse = await fetch('https://playschoolmanagementbackend.onrender.com/api/auth/signin', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
+const loginResponse = await fetch(
+  "https://playschoolmanagementbackend.onrender.com/api/auth/signin",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      username: "admin",
+      password: "Admin123456",
+    }),
   },
-  body: JSON.stringify({
-    username: 'admin',
-    password: 'Admin123456'
-  })
-});
+);
 
 const loginData = await loginResponse.json();
 const token = loginData.token;
 
 // 2. Use token for protected endpoints
-const studentsResponse = await fetch('https://playschoolmanagementbackend.onrender.com/api/students', {
-  method: 'GET',
-  headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
-  }
-});
+const studentsResponse = await fetch(
+  "https://playschoolmanagementbackend.onrender.com/api/students",
+  {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  },
+);
 
 const students = await studentsResponse.json();
 console.log(students);
@@ -111,6 +125,7 @@ console.log(students);
 ## 📋 **Available Endpoints**
 
 ### **🟢 Public (No Auth Required):**
+
 - `GET /api/test/all` - Test endpoint
 - `GET /api/home/` - API info
 - `GET /api/home/health` - Health check
@@ -120,6 +135,7 @@ console.log(students);
 - `POST /api/auth/signin` - Login
 
 ### **🔒 Protected (Auth Required):**
+
 - `GET /api/students` - Get all students (ADMIN/TEACHER/STAFF)
 - `POST /api/students/register` - Register student (ADMIN/STAFF)
 - `PUT /api/students/{id}` - Update student (ADMIN/STAFF)
@@ -128,11 +144,13 @@ console.log(students);
 ## 🚀 **Quick Test Sequence**
 
 1. **Test Public Endpoint:**
+
    ```bash
    curl https://playschoolmanagementbackend.onrender.com/api/students/public/test
    ```
 
 2. **Create Admin User:**
+
    ```bash
    curl -X POST https://playschoolmanagementbackend.onrender.com/api/auth/signup \
      -H "Content-Type: application/json" \
@@ -140,6 +158,7 @@ console.log(students);
    ```
 
 3. **Login:**
+
    ```bash
    curl -X POST https://playschoolmanagementbackend.onrender.com/api/auth/signin \
      -H "Content-Type: application/json" \
@@ -156,7 +175,9 @@ Your API is working perfectly! You just need to authenticate for protected endpo
 ## 🔧 **Frontend Integration Fix**
 
 ### **Current Error Analysis:**
+
 Your frontend is calling protected endpoints without JWT tokens:
+
 - ❌ `/api/students` (requires auth)
 - ❌ `/api/students/register` (requires auth)
 - ❌ `/students` (404 - wrong path)
@@ -183,16 +204,17 @@ testConnection() {
 ```
 
 ### **Complete Frontend Service Example:**
+
 ```typescript
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Injectable } from "@angular/core";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { Observable } from "rxjs";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class StudentService {
-  private baseUrl = 'https://playschoolmanagementbackend.onrender.com';
+  private baseUrl = "https://playschoolmanagementbackend.onrender.com";
   private token: string | null = null;
 
   constructor(private http: HttpClient) {}
@@ -213,12 +235,12 @@ export class StudentService {
 
   setToken(token: string) {
     this.token = token;
-    localStorage.setItem('jwt_token', token);
+    localStorage.setItem("jwt_token", token);
   }
 
   getToken(): string | null {
     if (!this.token) {
-      this.token = localStorage.getItem('jwt_token');
+      this.token = localStorage.getItem("jwt_token");
     }
     return this.token;
   }
@@ -227,26 +249,27 @@ export class StudentService {
   private getAuthHeaders(): HttpHeaders {
     const token = this.getToken();
     return new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     });
   }
 
   getStudents(): Observable<any> {
     return this.http.get(`${this.baseUrl}/api/students`, {
-      headers: this.getAuthHeaders()
+      headers: this.getAuthHeaders(),
     });
   }
 
   registerStudent(student: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/api/students/register`, student, {
-      headers: this.getAuthHeaders()
+      headers: this.getAuthHeaders(),
     });
   }
 }
 ```
 
 ### **Component Usage:**
+
 ```typescript
 // In your component
 export class StudentComponent implements OnInit {
@@ -259,7 +282,7 @@ export class StudentComponent implements OnInit {
   ngOnInit() {
     // Test public endpoint first
     this.loadPublicData();
-    
+
     // Check if user is authenticated
     if (this.studentService.getToken()) {
       this.isAuthenticated = true;
@@ -270,50 +293,50 @@ export class StudentComponent implements OnInit {
   loadPublicData() {
     // This works without authentication
     this.studentService.getStudentCount().subscribe(
-      data => {
+      (data) => {
         this.studentCount = data.count || data;
-        console.log('Student count:', this.studentCount);
+        console.log("Student count:", this.studentCount);
       },
-      error => console.error('Error loading public data:', error)
+      (error) => console.error("Error loading public data:", error),
     );
   }
 
   loadProtectedData() {
     // This requires authentication
     this.studentService.getStudents().subscribe(
-      data => {
+      (data) => {
         this.students = data;
-        console.log('Students:', this.students);
+        console.log("Students:", this.students);
       },
-      error => {
-        console.error('Error loading protected data:', error);
+      (error) => {
+        console.error("Error loading protected data:", error);
         // Redirect to login if 401
         if (error.status === 401) {
           this.redirectToLogin();
         }
-      }
+      },
     );
   }
 
   login() {
     const credentials = {
-      username: 'admin',
-      password: 'Admin123456'
+      username: "admin",
+      password: "Admin123456",
     };
 
     this.studentService.login(credentials).subscribe(
-      response => {
+      (response) => {
         this.studentService.setToken(response.token);
         this.isAuthenticated = true;
         this.loadProtectedData();
       },
-      error => console.error('Login failed:', error)
+      (error) => console.error("Login failed:", error),
     );
   }
 
   redirectToLogin() {
     // Implement your login redirect logic
-    console.log('Please login to access protected data');
+    console.log("Please login to access protected data");
   }
 }
 ```

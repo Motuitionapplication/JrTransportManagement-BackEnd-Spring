@@ -13,7 +13,7 @@ REM Set Spring profile
 set SPRING_PROFILES_ACTIVE=postgresql
 
 echo Starting application...
-java -cp "%CLASSPATH%" -Dspring.profiles.active=%SPRING_PROFILES_ACTIVE% com.playschool.management.JrTransportManagementApplication
+java -cp "%CLASSPATH%" -Dspring.profiles.active=%SPRING_PROFILES_ACTIVE% com.transport.management.JrTransportManagementApplication
 
 echo.
 echo Application stopped.
